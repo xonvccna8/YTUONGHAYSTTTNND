@@ -48,8 +48,89 @@ const TEST_CONFIG = {
 };
 // ---------------------------------------------------
 
+const IDEA_MEMORY_KEY = 'ideagpt_idea_memory';
+const IDEA_MEMORY_LIMIT = 320;
+const IDEA_MEMORY_PROMPT_LIMIT = 120;
+
+interface IdeaMemoryEntry {
+  title: string;
+  signature: string;
+  timestamp: number;
+  source?: string;
+  field?: string;
+  grade?: string;
+}
+
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
+}
+
+function normalizeIdeaSignature(value: string) {
+  return value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function cleanIdeaTitle(value: string) {
+  return value
+    .replace(/\*\*/g, '')
+    .replace(/\[[^\]]*\]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function extractIdeaMemoryEntries(
+  content: string,
+  metadata: Partial<Pick<IdeaMemoryEntry, 'source' | 'field' | 'grade'>> = {}
+): IdeaMemoryEntry[] {
+  const matches = [...content.matchAll(/^###\s*(?:💡\s*)?Ý TƯỞNG\s+\d+\s*:\s*(.+)$/gmi)];
+  const timestamp = Date.now();
+
+  return matches
+    .map(match => cleanIdeaTitle(match[1] || ''))
+    .filter(title => title.length > 0)
+    .map(title => ({
+      title,
+      signature: normalizeIdeaSignature(title),
+      timestamp,
+      ...metadata,
+    }))
+    .filter(entry => entry.signature.length > 0);
+}
+
+function readIdeaMemory(): IdeaMemoryEntry[] {
+  try {
+    const saved = localStorage.getItem(IDEA_MEMORY_KEY);
+    const parsed = saved ? JSON.parse(saved) : [];
+    if (!Array.isArray(parsed)) return [];
+
+    return parsed
+      .filter((entry): entry is IdeaMemoryEntry =>
+        Boolean(entry?.title && entry?.signature && typeof entry.title === 'string' && typeof entry.signature === 'string')
+      )
+      .slice(0, IDEA_MEMORY_LIMIT);
+  } catch {
+    return [];
+  }
+}
+
+function writeIdeaMemory(entries: IdeaMemoryEntry[]) {
+  const unique = new Map<string, IdeaMemoryEntry>();
+
+  for (const entry of entries) {
+    if (!entry.signature || unique.has(entry.signature)) continue;
+    unique.set(entry.signature, entry);
+  }
+
+  localStorage.setItem(IDEA_MEMORY_KEY, JSON.stringify([...unique.values()].slice(0, IDEA_MEMORY_LIMIT)));
+}
+
+function clearIdeaMemory() {
+  localStorage.removeItem(IDEA_MEMORY_KEY);
 }
 
 async function readApiJson(response: Response) {
@@ -275,6 +356,58 @@ export default function App() {
     return lines.slice(startIndex, endIndex).join('\n');
   };
 
+  const getIdeaMemorySnapshot = () => {
+    const allEntries: IdeaMemoryEntry[] = [
+      ...readIdeaMemory(),
+      ...history.flatMap(session =>
+        extractIdeaMemoryEntries(session.result, {
+          source: 'Lịch sử',
+          field: session.inputs.field,
+          grade: session.inputs.grade,
+        })
+      ),
+      ...savedIdeas.flatMap(idea =>
+        extractIdeaMemoryEntries(idea.content, {
+          source: 'Đã lưu',
+          field: idea.inputs.field,
+          grade: idea.inputs.grade,
+        })
+      ),
+    ];
+    const unique = new Map<string, IdeaMemoryEntry>();
+
+    for (const entry of allEntries) {
+      if (!entry.signature || unique.has(entry.signature)) continue;
+      unique.set(entry.signature, entry);
+    }
+
+    return [...unique.values()]
+      .sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0))
+      .slice(0, IDEA_MEMORY_LIMIT);
+  };
+
+  const buildIdeaExclusionPrompt = () => {
+    const entries = getIdeaMemorySnapshot().slice(0, IDEA_MEMORY_PROMPT_LIMIT);
+    if (entries.length === 0) {
+      return 'Chưa có ý tưởng cũ trong bộ nhớ. Vẫn phải tự tạo các ý tưởng khác biệt nhau trong cùng một lần sinh.';
+    }
+
+    return entries
+      .map((entry, index) => `${index + 1}. ${entry.title}`)
+      .join('\n');
+  };
+
+  const persistIdeaMemoryFromResult = (content: string) => {
+    const newEntries = extractIdeaMemoryEntries(content, {
+      source: 'Đã tạo',
+      field,
+      grade,
+    });
+
+    if (newEntries.length === 0) return;
+    writeIdeaMemory([...newEntries, ...getIdeaMemorySnapshot()]);
+  };
+
   const generateIdeas = async (isReroll = false) => {
     setIsGenerating(true);
     setResult('');
@@ -287,6 +420,7 @@ export default function App() {
     // Simulated deep thinking phases
     const loadingSteps = [
       'Đang phân tích bối cảnh và các vấn đề nhức nhối trong thực tế...',
+      'Đang đối chiếu với kho ý tưởng đã có để tránh trùng lặp...',
       'Đang tìm kiếm các giải pháp đột phá, đảm bảo Tính mới và Tính sáng tạo...',
       'Đang đánh giá Tính khả thi và Tính bền vững cho học sinh...',
       'Đang tinh chỉnh và chọn lọc ra 20 ý tưởng xuất sắc nhất...',
@@ -305,6 +439,8 @@ export default function App() {
     await new Promise(resolve => setTimeout(resolve, 8000));
 
     try {
+      const ideaExclusionList = buildIdeaExclusionPrompt();
+      const noveltySeed = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
       const prompt = `
 Bạn là một Chuyên gia AI hàng đầu về Đổi mới Sáng tạo và là Giám khảo cấp quốc gia của "Cuộc thi Sáng tạo Thanh thiếu niên Nhi đồng" tại Việt Nam.
 Nhiệm vụ của bạn là tạo ra ĐÚNG 20 Ý TƯỞNG xuất sắc nhất. Các ý tưởng phải có tính mới, tính sáng tạo cao, tính khả thi, tính bền vững cao và đặc biệt phải có ý nghĩa lớn trong cuộc sống học tập.
@@ -324,6 +460,18 @@ THÔNG TIN ĐẦU VÀO:
 - Bối cảnh: ${context || 'Không có'}
 - Nguồn lực: ${resources || 'Không có'}
 
+MÃ PHIÊN SÁNG TẠO: ${noveltySeed}
+Hãy dùng mã phiên này để mở một nhánh tư duy mới. Nếu người dùng bấm tạo nhiều lần với cùng thông tin đầu vào, kết quả lần sau vẫn phải khác hẳn lần trước.
+
+KHO Ý TƯỞNG ĐÃ CÓ TRÊN MÁY NGƯỜI DÙNG (DANH SÁCH CẦN TRÁNH):
+${ideaExclusionList}
+
+QUY TẮC CHỐNG TRÙNG LẶP BẮT BUỘC:
+- Tuyệt đối KHÔNG dùng lại tên ý tưởng, vấn đề chính, cơ chế hoạt động, tính năng nổi bật hoặc cách làm cốt lõi của danh sách đã có.
+- Không được chỉ đổi vật liệu, đổi địa điểm, đổi cấp học hoặc đổi tên cho một ý tưởng cũ. Phải đổi cả "nỗi đau", đối tượng phục vụ, cơ chế giải pháp và sản phẩm đầu ra.
+- Trong 20 ý tưởng của lần này cũng không được trùng nhau. Mỗi ý tưởng phải đi theo một hướng công nghệ/cơ chế/đối tượng ứng dụng khác biệt rõ.
+- Nếu một hướng có nguy cơ giống ý tưởng cũ, hãy tự loại bỏ và thay bằng hướng mới lạ hơn.
+
 ${isReroll ? 'YÊU CẦU ĐẶC BIỆT: Đây là lần [TÌM LẠI]. Hãy tạo 20 ý tưởng MỚI HOÀN TOÀN, không trùng lặp với lần trước.' : ''}
 
 TIÊU CHÍ ĐÁNH GIÁ CỐT LÕI (BẮT BUỘC ĐÁP ỨNG CHO CẢ 20 Ý TƯỞNG):
@@ -335,7 +483,7 @@ TIÊU CHÍ ĐÁNH GIÁ CỐT LÕI (BẮT BUỘC ĐÁP ỨNG CHO CẢ 20 Ý TƯ�
 
 RÀNG BUỘC BẮT BUỘC VỀ KẾT QUẢ:
 - Phải hoàn thành đủ từ ### 💡 Ý TƯỞNG 1 đến ### 💡 Ý TƯỞNG 20. Tuyệt đối không dừng ở Ý TƯỞNG 8, 10 hoặc 12.
-- Nếu cần rút gọn để đủ 20 ý tưởng, hãy rút gọn từng gạch đầu dòng nhưng vẫn giữ đủ 6 mục phân tích cho mỗi ý tưởng.
+- Nếu cần rút gọn để đủ 20 ý tưởng, hãy rút gọn từng gạch đầu dòng nhưng vẫn giữ đủ 8 mục phân tích cho mỗi ý tưởng.
 - Chỉ viết TOP 3 sau khi đã trình bày xong Ý TƯỞNG 20.
 
 HÃY XUẤT KẾT QUẢ THEO ĐÚNG ĐỊNH DẠNG MARKDOWN SAU:
@@ -352,10 +500,12 @@ HÃY XUẤT KẾT QUẢ THEO ĐÚNG ĐỊNH DẠNG MARKDOWN SAU:
 ### 💡 Ý TƯỞNG 1: [Tên ý tưởng thật ấn tượng, rõ nghĩa]
 - **Vấn đề & Ý nghĩa thực tiễn:** (Nỗi đau nào trong học tập/cuộc sống đang được giải quyết?)
 - **So sánh với giải pháp cũ:** (Những cái đã làm là gì? Tại sao giải pháp này sáng tạo và hữu ích hơn nhiều?)
+- **Tính năng nổi bật duy nhất:** (Nêu đúng 1 tính năng/cải tiến then chốt làm ý tưởng này khác biệt mạnh nhất)
 - **Cơ chế hoạt động & Giải pháp:** (Mô tả rõ cách sản phẩm hoạt động, đơn giản nhưng thực tế cao)
 - **Kiến thức vận dụng:** (Học sinh cần vận dụng kiến thức môn học nào đã học để nghiên cứu dự án này?)
 - **Tính khả thi & Bền vững:** (Phân tích vật liệu, độ khó kỹ thuật, tính an toàn cho học sinh ${grade}, tác động môi trường, chi phí)
-- **🛠 Hướng dẫn cách làm tóm tắt:** (Các bước chính để học sinh tự thực hiện)
+- **🛠 Cách làm ngắn gọn:** (3-5 bước chính, dễ hiểu, để học sinh nắm ngay lộ trình thực hiện)
+- **🔬 Cách làm chi tiết:** (Vật liệu/công cụ, quy trình lắp ráp hoặc lập trình, cách kiểm thử, tiêu chí đánh giá và hướng cải tiến)
 
 ### 💡 Ý TƯỞNG 2: [Tên ý tưởng thật ấn tượng, rõ nghĩa]
 ... (Tương tự như trên)
@@ -524,7 +674,11 @@ NHIỆM VỤ BẮT BUỘC:
 2. Bắt đầu chính xác bằng heading: ### 💡 Ý TƯỞNG ${nextIdeaNumber}: [Tên ý tưởng]
 3. Viết tiếp đầy đủ đến ### 💡 Ý TƯỞNG 20.
 4. Sau Ý TƯỞNG 20, viết mục ## 🏆 4. TOP 3 Ý TƯỞNG "CHAMPION" (KHUYÊN CHỌN NHẤT).
-5. Giữ đúng cấu trúc 6 gạch đầu dòng cho mỗi ý tưởng: Vấn đề & Ý nghĩa thực tiễn; So sánh với giải pháp cũ; Cơ chế hoạt động & Giải pháp; Kiến thức vận dụng; Tính khả thi & Bền vững; Hướng dẫn cách làm tóm tắt.
+5. Giữ đúng cấu trúc 8 gạch đầu dòng cho mỗi ý tưởng: Vấn đề & Ý nghĩa thực tiễn; So sánh với giải pháp cũ; Tính năng nổi bật duy nhất; Cơ chế hoạt động & Giải pháp; Kiến thức vận dụng; Tính khả thi & Bền vững; Cách làm ngắn gọn; Cách làm chi tiết.
+6. Mọi ý tưởng viết tiếp phải khác hoàn toàn các ý tưởng trong bộ nhớ cũ và khác các ý tưởng đã có ở phần trước.
+
+KHO Ý TƯỞNG ĐÃ CÓ TRÊN MÁY NGƯỜI DÙNG (DANH SÁCH CẦN TRÁNH):
+${ideaExclusionList}
 
 THÔNG TIN ĐẦU VÀO:
 - Lĩnh vực: ${field}
@@ -553,6 +707,8 @@ ${fullText.slice(-6000)}
         fullText += `\n\n> ⚠️ Kết quả hiện chưa đủ 20 ý tưởng do mô hình dừng sớm. Hãy bấm "Tìm Lại" hoặc chọn chế độ nâng cao khác để tạo lại danh sách đầy đủ.`;
         setResult(fullText);
       }
+
+      persistIdeaMemoryFromResult(fullText);
 
       const newId = Date.now().toString();
       setCurrentSessionId(newId);
@@ -1864,6 +2020,7 @@ Trình bày bằng Markdown, rõ ràng, ngắn gọn và có tính thực tế.`
                           <button
                             onClick={() => {
                               setHistory([]);
+                              clearIdeaMemory();
                               setCurrentSessionId(null);
                               setResult('');
                               setCompareResult('');
