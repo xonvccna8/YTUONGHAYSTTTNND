@@ -530,7 +530,14 @@ HÃY XUẤT KẾT QUẢ THEO ĐÚNG ĐỊNH DẠNG MARKDOWN SAU:
 ... (Tương tự như trên)
 
 ## 🏆 4. TOP 3 Ý TƯỞNG "CHAMPION" (KHUYÊN CHỌN NHẤT)
-(Chọn ra 3 ý tưởng xuất sắc toàn diện nhất trong 20 ý tưởng trên. Giải thích lý do tại sao các ý tưởng này có khả năng đạt giải Nhất cao nhất dựa trên các tiêu chí của ban giám khảo)
+Chọn ra 3 ý tưởng xuất sắc toàn diện nhất trong 20 ý tưởng trên và trình bày BẮT BUỘC bằng bảng Markdown GFM có đúng các cột sau:
+| Hạng | Ý tưởng | Điểm | Lý do chọn | Hướng phát triển |
+|---|---|---:|---|---|
+| 🥇 Champion 1 | Ý tưởng số + tên ý tưởng | xx/100 | Lý do ngắn gọn, thuyết phục | Việc nên làm tiếp theo |
+| 🥈 Champion 2 | Ý tưởng số + tên ý tưởng | xx/100 | Lý do ngắn gọn, thuyết phục | Việc nên làm tiếp theo |
+| 🥉 Champion 3 | Ý tưởng số + tên ý tưởng | xx/100 | Lý do ngắn gọn, thuyết phục | Việc nên làm tiếp theo |
+
+Sau bảng, viết thêm 2-3 câu "Ghi chú lựa chọn" để giải thích vì sao 3 ý tưởng này đáng ưu tiên.
       `;
 
       let fullText = '';
@@ -687,7 +694,7 @@ NHIỆM VỤ BẮT BUỘC:
 1. KHÔNG viết lại các ý tưởng đã có.
 2. Bắt đầu chính xác bằng heading: ### 💡 Ý TƯỞNG ${nextIdeaNumber}: [Tên ý tưởng]
 3. Viết tiếp đầy đủ đến ### 💡 Ý TƯỞNG 20.
-4. Sau Ý TƯỞNG 20, viết mục ## 🏆 4. TOP 3 Ý TƯỞNG "CHAMPION" (KHUYÊN CHỌN NHẤT).
+4. Sau Ý TƯỞNG 20, viết mục ## 🏆 4. TOP 3 Ý TƯỞNG "CHAMPION" (KHUYÊN CHỌN NHẤT) bằng bảng Markdown GFM có đúng 5 cột: Hạng | Ý tưởng | Điểm | Lý do chọn | Hướng phát triển.
 5. Giữ đúng cấu trúc 8 gạch đầu dòng cho mỗi ý tưởng: Vấn đề & Ý nghĩa thực tiễn; So sánh với giải pháp cũ; Tính năng nổi bật duy nhất; Cơ chế hoạt động & Giải pháp; Kiến thức vận dụng; Tính khả thi & Bền vững; Điểm đánh giá; Cách làm ngắn gọn.
 6. Mọi ý tưởng viết tiếp phải khác hoàn toàn các ý tưởng trong bộ nhớ cũ và khác các ý tưởng đã có ở phần trước.
 7. KHÔNG viết phần "Cách làm chi tiết"; phần này chỉ sinh khi người dùng bấm nút riêng.
@@ -1686,6 +1693,26 @@ Trình bày bằng Markdown, rõ ràng, ngắn gọn và có tính thực tế.`
     strong: ({node, ...props}: any) => <strong className="text-emerald-300 font-semibold tracking-wide" {...props} />,
     p: ({node, ...props}: any) => <p className="text-teal-50/90 leading-relaxed mb-5 text-[1.05rem]" {...props} />,
     blockquote: ({node, ...props}: any) => <blockquote className="border-l-4 border-emerald-500 bg-gradient-to-r from-emerald-900/20 to-transparent p-5 rounded-r-2xl italic text-teal-100 my-8 shadow-sm" {...props} />,
+    table: ({node, ...props}: any) => (
+      <div className="my-8 overflow-x-auto rounded-2xl border border-emerald-700/60 bg-teal-950/50 shadow-lg shadow-teal-950/30">
+        <table className="w-full min-w-[760px] border-collapse text-sm text-teal-50" {...props} />
+      </div>
+    ),
+    thead: ({node, ...props}: any) => <thead className="bg-emerald-500/15 text-emerald-200" {...props} />,
+    tbody: ({node, ...props}: any) => <tbody className="divide-y divide-teal-700/60" {...props} />,
+    tr: ({node, ...props}: any) => <tr className="border-b border-teal-700/60 last:border-b-0 hover:bg-emerald-500/5 transition-colors" {...props} />,
+    th: ({node, ...props}: any) => (
+      <th
+        className="border-r border-teal-700/60 last:border-r-0 px-4 py-3 text-left text-xs font-extrabold uppercase tracking-wide text-emerald-200"
+        {...props}
+      />
+    ),
+    td: ({node, ...props}: any) => (
+      <td
+        className="border-r border-teal-800/60 last:border-r-0 px-4 py-4 align-top leading-relaxed text-teal-50/90 first:font-bold first:text-emerald-300 [&:nth-child(3)]:whitespace-nowrap [&:nth-child(3)]:text-center [&:nth-child(3)]:font-extrabold [&:nth-child(3)]:text-emerald-300"
+        {...props}
+      />
+    ),
     code: ({node, inline, ...props}: any) => inline 
       ? <code className="bg-teal-900/60 text-emerald-200 px-2 py-0.5 rounded-md text-sm font-mono border border-teal-700/50" {...props} />
       : <code className="block bg-[#0f172a] text-teal-50 p-6 rounded-2xl text-sm font-mono overflow-x-auto my-8 shadow-xl border border-slate-800" {...props} />,
