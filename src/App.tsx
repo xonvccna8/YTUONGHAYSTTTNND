@@ -35,6 +35,17 @@ function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+async function readApiJson(response: Response) {
+  const text = await response.text();
+  if (!text) return {};
+
+  try {
+    return JSON.parse(text);
+  } catch {
+    throw new Error(`Máy chủ trả về dữ liệu không hợp lệ (HTTP ${response.status}). Vui lòng tải lại trang.`);
+  }
+}
+
 const FIELD_OPTIONS = [
   'Đồ dùng học tập',
   'Phần mềm tin học',
@@ -150,7 +161,7 @@ export default function App() {
         body: JSON.stringify({ passcode: code, deviceId: getDeviceId() })
       });
       
-      const data = await response.json();
+      const data = await readApiJson(response);
       
       if (data.success) {
         setIsAuthenticated(true);

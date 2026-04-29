@@ -7,3 +7,5 @@ coverage/
 .env*
 !.env.example
 device_registry.json
+
+.vercel

@@ -1,4 +1,5 @@
 import { GoogleGenAI } from "@google/genai";
+import OpenAI from "openai";
 import { getErrorMessage, readJson, setSseHeaders, validatePasscode, writeDone, writeSse } from "../lib/vercel-api.js";
 
 export const config = {
@@ -28,33 +29,71 @@ export default async function handler(req, res) {
 
     setSseHeaders(res);
 
-    const key = process.env.GEMINI_API_KEY;
-    if (!key) {
-      writeSse(res, { error: "GEMINI_API_KEY chưa được cấu hình trên Vercel." });
+    const geminiKey = process.env.GEMINI_API_KEY;
+    const openaiKey = process.env.OPENAI_API_KEY;
+    if (!geminiKey && !openaiKey) {
+      writeSse(res, { error: "Chưa cấu hình OPENAI_API_KEY hoặc GEMINI_API_KEY trên Vercel." });
       writeDone(res);
       return res.end();
     }
 
-    const genAI = new GoogleGenAI({ apiKey: key });
+    const streamWithOpenAI = async () => {
+      if (!openaiKey) {
+        throw new Error("OPENAI_API_KEY chưa được cấu hình trên Vercel.");
+      }
 
-    try {
-      const stream = await genAI.models.generateContentStream({
-        model: "gemini-3.1-pro-preview",
-        contents: prompt,
-        config: {
-          tools: [{ googleSearch: {} }],
-        },
+      const openai = new OpenAI({ apiKey: openaiKey });
+      const stream = await openai.chat.completions.create({
+        model: "gpt-5.4",
+        messages: [{ role: "user", content: prompt }],
+        temperature: 0.85,
+        presence_penalty: 0.5,
+        frequency_penalty: 0.3,
+        max_completion_tokens: 4096,
+        stream: true,
       });
 
       for await (const chunk of stream) {
-        if (chunk.text) {
-          writeSse(res, { text: chunk.text });
+        const content = chunk.choices[0]?.delta?.content || "";
+        if (content) {
+          writeSse(res, { text: content });
         }
+      }
+    };
+
+    try {
+      if (!geminiKey) {
+        await streamWithOpenAI();
+        writeDone(res);
+        return res.end();
+      }
+
+      try {
+        const genAI = new GoogleGenAI({ apiKey: geminiKey });
+        const stream = await genAI.models.generateContentStream({
+          model: "gemini-3.1-pro-preview",
+          contents: prompt,
+          config: {
+            tools: [{ googleSearch: {} }],
+          },
+        });
+
+        for await (const chunk of stream) {
+          if (chunk.text) {
+            writeSse(res, { text: chunk.text });
+          }
+        }
+      } catch (geminiError) {
+        console.error("Gemini API Stream Error:", geminiError);
+        if (!openaiKey) {
+          throw geminiError;
+        }
+        await streamWithOpenAI();
       }
 
       writeDone(res);
     } catch (error) {
-      console.error("Gemini API Stream Error:", error);
+      console.error("AI stream fallback error:", error);
       let errorMessage = getErrorMessage(error, "Lỗi không xác định từ Gemini API");
 
       if (errorMessage.includes("API key not valid")) {
