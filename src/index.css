@@ -1,0 +1,77 @@
+@import "tailwindcss";
+
+@layer utilities {
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    @apply bg-teal-800/50 rounded-full;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    @apply bg-teal-600;
+  }
+}
+
+@layer components {
+  .prose {
+    @apply text-teal-100 leading-relaxed max-w-none;
+  }
+  .prose h1 {
+    @apply text-3xl font-extrabold mt-8 mb-6 text-teal-50 tracking-tight;
+  }
+  .prose h2 {
+    @apply text-2xl font-bold mt-10 mb-5 text-teal-50 tracking-tight border-b border-teal-700/50 pb-3 flex items-center gap-2;
+  }
+  .prose h3 {
+    @apply text-xl font-bold mt-8 mb-4 text-teal-50 bg-teal-900/30 p-4 rounded-xl border border-teal-700/50;
+  }
+  .prose h4 {
+    @apply text-lg font-bold mt-6 mb-3 text-teal-50;
+  }
+  .prose p {
+    @apply mb-5;
+  }
+  .prose ul {
+    @apply list-disc pl-6 mb-5 space-y-2;
+  }
+  .prose ol {
+    @apply list-decimal pl-6 mb-5 space-y-2;
+  }
+  .prose li {
+    @apply pl-1 marker:text-teal-500;
+  }
+  .prose strong {
+    @apply font-semibold text-teal-50;
+  }
+  .prose blockquote {
+    @apply border-l-4 border-emerald-500/50 pl-5 italic text-teal-200 bg-teal-900/30 py-3 pr-5 rounded-r-xl my-6;
+  }
+  .prose code {
+    @apply bg-teal-900/50 text-emerald-300 px-1.5 py-0.5 rounded-md text-sm font-mono border border-teal-700/50;
+  }
+  .prose pre {
+    @apply bg-teal-950 text-teal-50 p-5 rounded-xl overflow-x-auto mb-6 font-mono text-sm leading-relaxed shadow-sm;
+  }
+  .prose pre code {
+    @apply bg-transparent text-inherit p-0 rounded-none border-none;
+  }
+  .prose table {
+    @apply w-full text-left border-collapse mb-6 overflow-hidden rounded-xl border border-teal-700/50;
+  }
+  .prose th {
+    @apply border-b-2 border-teal-700/50 py-3 px-4 font-semibold text-teal-100 bg-teal-900/30;
+  }
+  .prose td {
+    @apply border-b border-teal-800/50 py-3 px-4;
+  }
+  .prose tr:last-child td {
+    @apply border-b-0;
+  }
+  .prose hr {
+    @apply my-10 border-teal-700/50;
+  }
+}
