@@ -47,7 +47,8 @@ export default async function handler(req, res) {
         temperature: 0.85,
         presence_penalty: 0.5,
         frequency_penalty: 0.3,
-        max_tokens: 16384,
+        thinking: { type: "disabled" },
+        max_tokens: 65536,
         stream: true,
       });
 

@@ -49,7 +49,7 @@ export default async function handler(req, res) {
         temperature: 0.85,
         presence_penalty: 0.5,
         frequency_penalty: 0.3,
-        max_completion_tokens: 4096,
+        max_completion_tokens: 16384,
         stream: true,
       });
 

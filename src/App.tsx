@@ -6,7 +6,24 @@ import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { motion, AnimatePresence } from 'motion/react';
 import { saveAs } from 'file-saver';
-import { Document, Packer, Paragraph, TextRun, HeadingLevel } from 'docx';
+import {
+  AlignmentType,
+  BorderStyle,
+  Document,
+  Footer,
+  Header,
+  HeadingLevel,
+  Packer,
+  PageBreak,
+  PageNumber,
+  Paragraph,
+  ShadingType,
+  Table,
+  TableCell,
+  TableRow,
+  TextRun,
+  WidthType,
+} from 'docx';
 
 declare global {
   interface Window {
@@ -293,7 +310,7 @@ Bạn là một Chuyên gia AI hàng đầu về Đổi mới Sáng tạo và l�
 Nhiệm vụ của bạn là tạo ra ĐÚNG 20 Ý TƯỞNG xuất sắc nhất. Các ý tưởng phải có tính mới, tính sáng tạo cao, tính khả thi, tính bền vững cao và đặc biệt phải có ý nghĩa lớn trong cuộc sống học tập.
 
 YÊU CẦU TỐI QUAN TRỌNG (THINKING PROCESS):
-1. Hãy suy nghĩ thật sâu sắc và cẩn thận (Take a deep breath and think step-by-step).
+1. Phân tích kỹ nhưng KHÔNG trình bày suy luận nội bộ dài dòng; chỉ viết phần tóm tắt định hướng cần thiết.
 2. TÌM KIẾM SỰ ĐỘT PHÁ: Tuyệt đối KHÔNG đề xuất các ý tưởng cũ rích, sáo mòn. Phải tìm và so sánh với những dự án/sản phẩm đã làm trước đây, từ đó đưa ra giải pháp sáng tạo và hữu ích hơn nhiều.
 3. TÍNH MỚI & SÁNG TẠO CAO: Ý tưởng phải thực sự độc đáo, chưa từng có ai làm hoặc áp dụng một góc nhìn/công nghệ hoàn toàn mới vào một vấn đề cũ.
 4. ĐƠN GIẢN NHƯNG THỰC TẾ: Giải pháp cần đơn giản nhưng có tính ứng dụng thực tế cao, giải quyết đúng "nỗi đau" trong học tập và đời sống.
@@ -315,6 +332,11 @@ TIÊU CHÍ ĐÁNH GIÁ CỐT LÕI (BẮT BUỘC ĐÁP ỨNG CHO CẢ 20 Ý TƯ�
 3. Tính khả thi: Phù hợp với năng lực học sinh (${grade}), học sinh có thể vận dụng kiến thức đã học để làm mô hình thực tế, vật liệu dễ tìm, an toàn tuyệt đối. Đơn giản nhưng hiệu quả cao.
 4. Tính bền vững: Thân thiện môi trường, có khả năng nhân rộng, chi phí hợp lý.
 5. Ý nghĩa trong cuộc sống học tập: Giải quyết một vấn đề thực tế, bức xúc trong học tập hoặc đời sống học đường, mang lại giá trị thiết thực.
+
+RÀNG BUỘC BẮT BUỘC VỀ KẾT QUẢ:
+- Phải hoàn thành đủ từ ### 💡 Ý TƯỞNG 1 đến ### 💡 Ý TƯỞNG 20. Tuyệt đối không dừng ở Ý TƯỞNG 8, 10 hoặc 12.
+- Nếu cần rút gọn để đủ 20 ý tưởng, hãy rút gọn từng gạch đầu dòng nhưng vẫn giữ đủ 6 mục phân tích cho mỗi ý tưởng.
+- Chỉ viết TOP 3 sau khi đã trình bày xong Ý TƯỞNG 20.
 
 HÃY XUẤT KẾT QUẢ THEO ĐÚNG ĐỊNH DẠNG MARKDOWN SAU:
 
@@ -348,12 +370,12 @@ HÃY XUẤT KẾT QUẢ THEO ĐÚNG ĐỊNH DẠNG MARKDOWN SAU:
       `;
 
       let fullText = '';
-      const fetchGPT = async () => {
+      const fetchGPT = async (promptText = prompt) => {
         const response = await fetch('/api/generate', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ 
-            prompt,
+            prompt: promptText,
             passcode: localStorage.getItem('savedPasscode'),
             deviceId: getDeviceId(),
             mode: generationMode === 'advanced' ? 'advanced-gpt' : 'basic'
@@ -403,12 +425,12 @@ HÃY XUẤT KẾT QUẢ THEO ĐÚNG ĐỊNH DẠNG MARKDOWN SAU:
         }
       };
 
-      const fetchDeepSeek = async () => {
+      const fetchDeepSeek = async (promptText = prompt) => {
         const response = await fetch('/api/generate-deepseek', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ 
-            prompt,
+            prompt: promptText,
             passcode: localStorage.getItem('savedPasscode'),
             deviceId: getDeviceId()
           })
@@ -457,14 +479,79 @@ HÃY XUẤT KẾT QUẢ THEO ĐÚNG ĐỊNH DẠNG MARKDOWN SAU:
         }
       };
 
-      if (generationMode === 'advanced') {
-        if (advancedModel === 'gpt') {
-          await fetchGPT();
+      const getLastIdeaNumber = (text: string) => {
+        const matches = [...text.matchAll(/^###\s*(?:💡\s*)?Ý TƯỞNG\s+(\d+)/gmi)];
+        return matches.reduce((max, match) => Math.max(max, Number(match[1] || 0)), 0);
+      };
+
+      const runSelectedModel = async (promptText = prompt) => {
+        if (generationMode === 'advanced') {
+          if (advancedModel === 'gpt') {
+            await fetchGPT(promptText);
+          } else {
+            await fetchDeepSeek(promptText);
+          }
         } else {
-          await fetchDeepSeek();
+          await fetchGPT(promptText);
         }
-      } else {
-        await fetchGPT();
+      };
+
+      await runSelectedModel();
+
+      let lastIdeaNumber = getLastIdeaNumber(fullText);
+      let continuationAttempts = 0;
+      const removePrematureChampionSection = (text: string) => {
+        const championIndex = text.search(/^##\s*(?:🏆\s*)?4\.\s*TOP\s+3/im);
+        if (championIndex === -1) return text;
+
+        const ideasBeforeChampion = getLastIdeaNumber(text.slice(0, championIndex));
+        return ideasBeforeChampion < 20 ? text.slice(0, championIndex).trimEnd() : text;
+      };
+
+      while (lastIdeaNumber > 0 && lastIdeaNumber < 20 && continuationAttempts < 3) {
+        continuationAttempts++;
+        fullText = removePrematureChampionSection(fullText);
+        setResult(fullText);
+        lastIdeaNumber = getLastIdeaNumber(fullText);
+
+        const nextIdeaNumber = lastIdeaNumber + 1;
+        setLoadingMessage(`Đang viết tiếp từ Ý tưởng ${nextIdeaNumber} đến Ý tưởng 20...`);
+        const continuationPrompt = `
+Bạn đang viết tiếp một báo cáo ý tưởng sáng tạo. Kết quả trước mới hoàn thành đến Ý TƯỞNG ${lastIdeaNumber}.
+
+NHIỆM VỤ BẮT BUỘC:
+1. KHÔNG viết lại các ý tưởng đã có.
+2. Bắt đầu chính xác bằng heading: ### 💡 Ý TƯỞNG ${nextIdeaNumber}: [Tên ý tưởng]
+3. Viết tiếp đầy đủ đến ### 💡 Ý TƯỞNG 20.
+4. Sau Ý TƯỞNG 20, viết mục ## 🏆 4. TOP 3 Ý TƯỞNG "CHAMPION" (KHUYÊN CHỌN NHẤT).
+5. Giữ đúng cấu trúc 6 gạch đầu dòng cho mỗi ý tưởng: Vấn đề & Ý nghĩa thực tiễn; So sánh với giải pháp cũ; Cơ chế hoạt động & Giải pháp; Kiến thức vận dụng; Tính khả thi & Bền vững; Hướng dẫn cách làm tóm tắt.
+
+THÔNG TIN ĐẦU VÀO:
+- Lĩnh vực: ${field}
+- Cấp học: ${capHoc} (Lớp: ${grade})
+- Giới hạn công nghệ: ${techLimit}
+- Mục tiêu: ${mucTieu}
+- Bối cảnh: ${context || 'Không có'}
+- Nguồn lực: ${resources || 'Không có'}
+
+PHẦN CUỐI KẾT QUẢ TRƯỚC ĐỂ TRÁNH TRÙNG LẶP:
+${fullText.slice(-6000)}
+        `;
+
+        fullText += '\n\n';
+        setResult(fullText);
+        const lengthBeforeContinuation = fullText.length;
+        await runSelectedModel(continuationPrompt);
+        const updatedLastIdeaNumber = getLastIdeaNumber(fullText);
+        if (updatedLastIdeaNumber <= lastIdeaNumber || fullText.length === lengthBeforeContinuation) {
+          break;
+        }
+        lastIdeaNumber = updatedLastIdeaNumber;
+      }
+
+      if (getLastIdeaNumber(fullText) < 20) {
+        fullText += `\n\n> ⚠️ Kết quả hiện chưa đủ 20 ý tưởng do mô hình dừng sớm. Hãy bấm "Tìm Lại" hoặc chọn chế độ nâng cao khác để tạo lại danh sách đầy đủ.`;
+        setResult(fullText);
       }
 
       const newId = Date.now().toString();
@@ -753,50 +840,142 @@ Trình bày bằng Markdown, rõ ràng, ngắn gọn và có tính thực tế.`
   };
 
   const generateAndDownloadWordDoc = async (content: string, title: string) => {
-    // Helper function to parse a single line of markdown into TextRuns
-    const parseMarkdownLine = (line: string): TextRun[] => {
+    const colors = {
+      primary: '0F766E',
+      primaryDark: '134E4A',
+      accent: '10B981',
+      soft: 'ECFDF5',
+      line: '99F6E4',
+      text: '1F2937',
+      muted: '475569',
+      white: 'FFFFFF',
+    };
+
+    const normalRun = { font: 'Arial', size: 23, color: colors.text };
+
+    const makeFileName = (name: string) => {
+      const cleaned = name
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-zA-Z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '')
+        .toLowerCase();
+      return cleaned || 'ideagpt-y-tuong-sang-tao';
+    };
+
+    const parseMarkdownLine = (
+      line: string,
+      overrides: { bold?: boolean; color?: string; size?: number; font?: string } = {}
+    ): TextRun[] => {
       const runs: TextRun[] = [];
       let currentText = '';
       let isBold = false;
       let isItalic = false;
+
+      const addRun = (text: string, options: { bold?: boolean; italics?: boolean } = {}) => {
+        runs.push(new TextRun({
+          ...normalRun,
+          ...overrides,
+          text,
+          bold: overrides.bold || options.bold || false,
+          italics: options.italics || false,
+        }));
+      };
       
       // Simple parser for **bold** and *italic*
       for (let i = 0; i < line.length; i++) {
         if (line.substring(i, i + 2) === '**') {
           if (currentText) {
-            runs.push(new TextRun({ text: currentText, bold: isBold, italics: isItalic }));
+            addRun(currentText, { bold: isBold, italics: isItalic });
             currentText = '';
           }
           isBold = !isBold;
           i++; // Skip the second '*'
         } else if (line[i] === '*' && line.substring(i, i + 2) !== '**') {
            if (currentText) {
-            runs.push(new TextRun({ text: currentText, bold: isBold, italics: isItalic }));
+            addRun(currentText, { bold: isBold, italics: isItalic });
             currentText = '';
           }
           isItalic = !isItalic;
+        } else if (line[i] === '`') {
+          if (currentText) {
+            addRun(currentText, { bold: isBold, italics: isItalic });
+            currentText = '';
+          }
+          const endIndex = line.indexOf('`', i + 1);
+          if (endIndex !== -1) {
+            runs.push(new TextRun({
+              text: line.slice(i + 1, endIndex),
+              font: 'Consolas',
+              size: 21,
+              color: colors.primaryDark,
+              shading: { type: ShadingType.CLEAR, fill: colors.soft, color: 'auto' },
+            }));
+            i = endIndex;
+          } else {
+            currentText += line[i];
+          }
         } else {
           currentText += line[i];
         }
       }
       
       if (currentText) {
-        runs.push(new TextRun({ text: currentText, bold: isBold, italics: isItalic }));
+        addRun(currentText, { bold: isBold, italics: isItalic });
       }
       
       return runs;
     };
 
-    const paragraphs: Paragraph[] = [];
-    
-    // Add Title
-    paragraphs.push(
-      new Paragraph({
-        children: [new TextRun({ text: title, bold: true, size: 32 })],
-        heading: HeadingLevel.TITLE,
-        spacing: { after: 400 },
-      })
-    );
+    const border = { style: BorderStyle.SINGLE, size: 4, color: colors.line };
+    const cellMargins = { top: 130, bottom: 130, left: 180, right: 180 };
+    const inputRows = [
+      ['Lĩnh vực', field],
+      ['Cấp học', capHoc],
+      ['Lớp', grade],
+      ['Giới hạn công nghệ', techLimit],
+      ['Mục tiêu', mucTieu],
+      ['Bối cảnh', context || 'Không có'],
+      ['Nguồn lực', resources || 'Không có'],
+      ['Ngày xuất file', new Date().toLocaleString('vi-VN')],
+    ];
+
+    const infoTable = new Table({
+      width: { size: 100, type: WidthType.PERCENTAGE },
+      borders: {
+        top: border,
+        bottom: border,
+        left: border,
+        right: border,
+        insideHorizontal: border,
+        insideVertical: border,
+      },
+      rows: inputRows.map(([label, value], index) => new TableRow({
+        children: [
+          new TableCell({
+            width: { size: 30, type: WidthType.PERCENTAGE },
+            margins: cellMargins,
+            shading: { type: ShadingType.CLEAR, fill: index % 2 === 0 ? colors.soft : colors.white, color: 'auto' },
+            children: [
+              new Paragraph({
+                children: [new TextRun({ text: label, bold: true, color: colors.primaryDark, font: 'Arial', size: 22 })],
+              }),
+            ],
+          }),
+          new TableCell({
+            width: { size: 70, type: WidthType.PERCENTAGE },
+            margins: cellMargins,
+            children: [
+              new Paragraph({
+                children: [new TextRun({ text: value, color: colors.text, font: 'Arial', size: 22 })],
+              }),
+            ],
+          }),
+        ],
+      })),
+    });
+
+    const bodyBlocks: (Paragraph | Table)[] = [];
 
     const lines = content.split('\n');
     let inList = false;
@@ -807,7 +986,7 @@ Trình bày bằng Markdown, rõ ràng, ngắn gọn và có tính thực tế.`
       if (!line) {
         // Empty line, add some spacing if not in a list
         if (!inList) {
-           paragraphs.push(new Paragraph({ text: "", spacing: { after: 120 } }));
+           bodyBlocks.push(new Paragraph({ text: "", spacing: { after: 80 } }));
         }
         continue;
       }
@@ -816,29 +995,42 @@ Trình bày bằng Markdown, rõ ràng, ngắn gọn và có tính thực tế.`
       if (line.startsWith('### ')) {
         inList = false;
         const text = line.replace(/^### /, '').trim();
-        paragraphs.push(
+        const isIdeaHeading = text.includes('Ý TƯỞNG');
+        bodyBlocks.push(
           new Paragraph({
-            children: parseMarkdownLine(text),
+            children: parseMarkdownLine(text, {
+              bold: true,
+              size: isIdeaHeading ? 27 : 25,
+              color: colors.primaryDark,
+            }),
             heading: HeadingLevel.HEADING_3,
-            spacing: { before: 240, after: 120 },
+            spacing: { before: isIdeaHeading ? 360 : 220, after: 140 },
+            shading: isIdeaHeading ? { type: ShadingType.CLEAR, fill: colors.soft, color: 'auto' } : undefined,
+            border: isIdeaHeading ? {
+              left: { style: BorderStyle.SINGLE, size: 18, color: colors.accent, space: 8 },
+              bottom: { style: BorderStyle.SINGLE, size: 4, color: colors.line, space: 2 },
+            } : undefined,
           })
         );
       } else if (line.startsWith('## ')) {
         inList = false;
         const text = line.replace(/^## /, '').trim();
-        paragraphs.push(
+        bodyBlocks.push(
           new Paragraph({
-            children: parseMarkdownLine(text),
+            children: [new TextRun({ text, bold: true, color: colors.primary, font: 'Arial', size: 30 })],
             heading: HeadingLevel.HEADING_2,
-            spacing: { before: 360, after: 120 },
+            spacing: { before: 420, after: 180 },
+            border: {
+              bottom: { style: BorderStyle.SINGLE, size: 8, color: colors.accent, space: 4 },
+            },
           })
         );
       } else if (line.startsWith('# ')) {
         inList = false;
         const text = line.replace(/^# /, '').trim();
-        paragraphs.push(
+        bodyBlocks.push(
           new Paragraph({
-            children: parseMarkdownLine(text),
+            children: [new TextRun({ text, bold: true, color: colors.primaryDark, font: 'Arial', size: 32 })],
             heading: HeadingLevel.HEADING_1,
             spacing: { before: 480, after: 240 },
           })
@@ -848,31 +1040,32 @@ Trình bày bằng Markdown, rõ ràng, ngắn gọn và có tính thực tế.`
       else if (line.startsWith('- ') || line.startsWith('* ')) {
         inList = true;
         const text = line.replace(/^[-*] /, '').trim();
-        paragraphs.push(
+        bodyBlocks.push(
           new Paragraph({
             children: parseMarkdownLine(text),
             bullet: { level: 0 },
-            spacing: { after: 60 },
+            spacing: { after: 95, line: 330 },
+            indent: { left: 520, hanging: 220 },
           })
         );
       } else if (line.match(/^\d+\.\s/)) {
          inList = true;
          const text = line.replace(/^\d+\.\s/, '').trim();
-         paragraphs.push(
+         bodyBlocks.push(
           new Paragraph({
             children: parseMarkdownLine(text),
-            numbering: { reference: "my-numbering", level: 0 },
-            spacing: { after: 60 },
+            numbering: { reference: "decimal-numbering", level: 0 },
+            spacing: { after: 95, line: 330 },
           })
         );
       }
       // Handle Horizontal Rule
       else if (line === '---' || line === '***' || line === '___') {
          inList = false;
-         paragraphs.push(
+         bodyBlocks.push(
            new Paragraph({
              text: "__________________________________________________",
-             alignment: "center",
+             alignment: AlignmentType.CENTER,
              spacing: { before: 120, after: 120 }
            })
          );
@@ -880,10 +1073,11 @@ Trình bày bằng Markdown, rõ ràng, ngắn gọn và có tính thực tế.`
       // Normal Paragraph
       else {
         inList = false;
-        paragraphs.push(
+        bodyBlocks.push(
           new Paragraph({
             children: parseMarkdownLine(line),
-            spacing: { after: 120 },
+            spacing: { after: 130, line: 340 },
+            alignment: AlignmentType.JUSTIFIED,
           })
         );
       }
@@ -893,7 +1087,7 @@ Trình bày bằng Markdown, rõ ràng, ngắn gọn và có tính thực tế.`
       numbering: {
         config: [
           {
-            reference: "my-numbering",
+            reference: "decimal-numbering",
             levels: [
               {
                 level: 0,
@@ -912,15 +1106,80 @@ Trình bày bằng Markdown, rõ ràng, ngắn gọn và có tính thực tế.`
       },
       sections: [
         {
-          properties: {},
-          children: paragraphs,
+          properties: {
+            page: {
+              margin: { top: 900, right: 820, bottom: 900, left: 900, header: 500, footer: 500 },
+              borders: {
+                pageBorderTop: { style: BorderStyle.SINGLE, size: 6, color: colors.line },
+                pageBorderBottom: { style: BorderStyle.SINGLE, size: 6, color: colors.line },
+                pageBorderLeft: { style: BorderStyle.SINGLE, size: 6, color: colors.line },
+                pageBorderRight: { style: BorderStyle.SINGLE, size: 6, color: colors.line },
+              },
+            },
+          },
+          headers: {
+            default: new Header({
+              children: [
+                new Paragraph({
+                  alignment: AlignmentType.RIGHT,
+                  children: [new TextRun({ text: 'IdeaGPT - Báo cáo ý tưởng sáng tạo', color: colors.primary, font: 'Arial', size: 18, bold: true })],
+                }),
+              ],
+            }),
+          },
+          footers: {
+            default: new Footer({
+              children: [
+                new Paragraph({
+                  alignment: AlignmentType.CENTER,
+                  children: [
+                    new TextRun({ text: 'Trang ', color: colors.muted, font: 'Arial', size: 18 }),
+                    new TextRun({ children: [PageNumber.CURRENT], color: colors.muted, font: 'Arial', size: 18 }),
+                  ],
+                }),
+              ],
+            }),
+          },
+          children: [
+            new Paragraph({
+              alignment: AlignmentType.CENTER,
+              spacing: { before: 460, after: 120 },
+              children: [new TextRun({ text: 'IDEAGPT', bold: true, color: colors.primary, font: 'Arial', size: 42 })],
+            }),
+            new Paragraph({
+              alignment: AlignmentType.CENTER,
+              spacing: { after: 260 },
+              children: [new TextRun({ text: 'BÁO CÁO Ý TƯỞNG SÁNG TẠO', bold: true, color: colors.primaryDark, font: 'Arial', size: 36 })],
+            }),
+            new Paragraph({
+              alignment: AlignmentType.CENTER,
+              spacing: { after: 420 },
+              children: [new TextRun({ text: title, bold: true, color: colors.text, font: 'Arial', size: 28 })],
+            }),
+            infoTable,
+            new Paragraph({
+              spacing: { before: 280, after: 80 },
+              alignment: AlignmentType.CENTER,
+              children: [
+                new TextRun({
+                  text: 'Tài liệu được định dạng tự động: tiêu đề, phân mục, danh sách, bảng thông tin và số trang.',
+                  italics: true,
+                  color: colors.muted,
+                  font: 'Arial',
+                  size: 20,
+                }),
+              ],
+            }),
+            new Paragraph({ children: [new PageBreak()] }),
+            ...bodyBlocks,
+          ],
         },
       ],
     });
 
     try {
       const blob = await Packer.toBlob(doc);
-      saveAs(blob, `${title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.docx`);
+      saveAs(blob, `${makeFileName(title)}.docx`);
     } catch (error) {
       console.error('Error generating or downloading Word document:', error);
       alert('Đã có lỗi xảy ra khi tạo file Word. Vui lòng thử lại.');

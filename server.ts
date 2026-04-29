@@ -168,7 +168,7 @@ async function startServer() {
           temperature: 0.85,
           presence_penalty: 0.5,
           frequency_penalty: 0.3,
-          max_completion_tokens: 4096,
+          max_completion_tokens: 16384,
           stream: true,
         });
 
@@ -278,9 +278,10 @@ async function startServer() {
           temperature: 0.85,
           presence_penalty: 0.5,
           frequency_penalty: 0.3,
-          max_tokens: 16384,
+          thinking: { type: "disabled" },
+          max_tokens: 65536,
           stream: true,
-        });
+        } as any) as any;
 
         for await (const chunk of stream) {
           if (res.writableEnded) break;
