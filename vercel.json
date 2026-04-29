@@ -1,9 +1,9 @@
 {
   "functions": {
-    "api/generate.ts": {
+    "api/generate.js": {
       "maxDuration": 300
     },
-    "api/generate-gemini.ts": {
+    "api/generate-gemini.js": {
       "maxDuration": 300
     }
   },

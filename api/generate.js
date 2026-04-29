@@ -1,11 +1,11 @@
 import OpenAI from "openai";
-import { getErrorMessage, readJson, setSseHeaders, validatePasscode, writeDone, writeSse } from "./_shared";
+import { getErrorMessage, readJson, setSseHeaders, validatePasscode, writeDone, writeSse } from "../lib/vercel-api.js";
 
 export const config = {
   maxDuration: 300,
 };
 
-export default async function handler(req: any, res: any) {
+export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
@@ -35,7 +35,7 @@ export default async function handler(req: any, res: any) {
       return res.end();
     }
 
-    const modelMap: Record<string, string> = {
+    const modelMap = {
       "advanced-gpt": "gpt-5.4",
       "basic-gpt": "gpt-5.4-mini",
     };
@@ -61,7 +61,7 @@ export default async function handler(req: any, res: any) {
       }
 
       writeDone(res);
-    } catch (error: any) {
+    } catch (error) {
       console.error("OpenAI API Stream Error:", error);
 
       let errorMessage = getErrorMessage(error, "Lỗi không xác định từ OpenAI API");

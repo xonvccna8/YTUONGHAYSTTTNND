@@ -1,6 +1,6 @@
-import { readJson, validatePasscode } from "./_shared";
+import { readJson, validatePasscode } from "../lib/vercel-api.js";
 
-export default async function handler(req: any, res: any) {
+export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ success: false, message: "Method not allowed" });
   }
@@ -17,7 +17,7 @@ export default async function handler(req: any, res: any) {
       return res.status(403).json({ success: false, message: result.message });
     }
 
-    return res.json({
+    return res.status(200).json({
       success: true,
       message: result.message,
       expiresAt: result.expiresAt,

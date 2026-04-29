@@ -1,11 +1,11 @@
 import { GoogleGenAI } from "@google/genai";
-import { getErrorMessage, readJson, setSseHeaders, validatePasscode, writeDone, writeSse } from "./_shared";
+import { getErrorMessage, readJson, setSseHeaders, validatePasscode, writeDone, writeSse } from "../lib/vercel-api.js";
 
 export const config = {
   maxDuration: 300,
 };
 
-export default async function handler(req: any, res: any) {
+export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
