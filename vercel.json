@@ -1,0 +1,16 @@
+{
+  "functions": {
+    "api/generate.ts": {
+      "maxDuration": 300
+    },
+    "api/generate-gemini.ts": {
+      "maxDuration": 300
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/((?!api/.*).*)",
+      "destination": "/index.html"
+    }
+  ]
+}
