@@ -85,7 +85,6 @@ interface SavedSession {
     resources: string;
   };
   result: string;
-  geminiResult?: string;
   compareResult?: string;
   mode?: 'basic' | 'advanced';
 }
@@ -199,7 +198,7 @@ export default function App() {
   const [loadingMessage, setLoadingMessage] = useState('Đang khởi tạo IdeaGPT...');
   const [result, setResult] = useState('');
   const [generationMode, setGenerationMode] = useState<'basic' | 'advanced'>('basic');
-  const [advancedModel, setAdvancedModel] = useState<'gpt' | 'gemini'>('gpt');
+  const [advancedModel, setAdvancedModel] = useState<'gpt' | 'deepseek'>('gpt');
   const [compareResult, setCompareResult] = useState('');
   const [isComparing, setIsComparing] = useState(false);
   const [inlineComparisons, setInlineComparisons] = useState<Record<string, string>>({});
@@ -349,8 +348,6 @@ HÃY XUẤT KẾT QUẢ THEO ĐÚNG ĐỊNH DẠNG MARKDOWN SAU:
       `;
 
       let fullText = '';
-      let fullGeminiText = '';
-      
       const fetchGPT = async () => {
         const response = await fetch('/api/generate', {
           method: 'POST',
@@ -406,8 +403,8 @@ HÃY XUẤT KẾT QUẢ THEO ĐÚNG ĐỊNH DẠNG MARKDOWN SAU:
         }
       };
 
-      const fetchGemini = async () => {
-        const response = await fetch('/api/generate-gemini', {
+      const fetchDeepSeek = async () => {
+        const response = await fetch('/api/generate-deepseek', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ 
@@ -464,7 +461,7 @@ HÃY XUẤT KẾT QUẢ THEO ĐÚNG ĐỊNH DẠNG MARKDOWN SAU:
         if (advancedModel === 'gpt') {
           await fetchGPT();
         } else {
-          await fetchGemini();
+          await fetchDeepSeek();
         }
       } else {
         await fetchGPT();
@@ -499,13 +496,13 @@ HÃY XUẤT KẾT QUẢ THEO ĐÚNG ĐỊNH DẠNG MARKDOWN SAU:
     setInlineComparisons(prev => ({ ...prev, [title]: '' }));
 
     const prompt = `Bạn là chuyên gia đánh giá dự án khoa học kỹ thuật và khởi nghiệp. Hãy phân tích và so sánh ý tưởng sau đây với các sản phẩm/giải pháp ĐÃ CÓ TRÊN THỊ TRƯỜNG hoặc TRÊN MẠNG.
-Vui lòng SỬ DỤNG CÔNG CỤ TÌM KIẾM GOOGLE để tìm kiếm thông tin mới nhất về các sản phẩm tương tự.
+Hãy phân tích bằng DeepSeek V4 Pro. Nếu không có dữ liệu chắc chắn, hãy nói rõ mức độ tin cậy thay vì bịa nguồn.
 
 Ý TƯỞNG CẦN ĐÁNH GIÁ:
 ${sectionContent}
 
-YÊU CẦU PHÂN TÍCH (Đóng vai trò GPT-4o/GPT-5 để phân tích sâu sắc):
-1. TÌM KIẾM THỰC TẾ (Bắt buộc dùng Google Search): Chỉ ra đích danh 2-3 sản phẩm/dự án tương tự đã có trên thực tế (bắt buộc kèm link tham khảo nếu có). Đừng bịa ra sản phẩm.
+YÊU CẦU PHÂN TÍCH (Đóng vai trò chuyên gia DeepSeek V4 Pro để phân tích sâu sắc):
+1. ĐỐI CHIẾU THỰC TẾ: Chỉ ra đích danh 2-3 sản phẩm/dự án tương tự đã có trên thực tế nếu bạn biết chắc. Kèm link tham khảo khi chắc chắn, không bịa nguồn.
 2. SO SÁNH ĐIỂM GIỐNG & KHÁC: Phân tích điểm giống và khác biệt cốt lõi giữa ý tưởng này và các sản phẩm đã có.
 3. ĐÁNH GIÁ TÍNH MỚI: Đánh giá khách quan xem ý tưởng này có thực sự "chưa ai làm" không? Điểm nào là cải tiến ĐÁNG GIÁ NHẤT và SÁNG TẠO NHẤT so với cái cũ?
 4. TÍNH ỨNG DỤNG: Đánh giá tính ứng dụng thực tế đối với học sinh lớp ${grade}.
@@ -513,7 +510,7 @@ YÊU CẦU PHÂN TÍCH (Đóng vai trò GPT-4o/GPT-5 để phân tích sâu sắ
 Trình bày bằng Markdown, ngắn gọn, súc tích, chuyên nghiệp và khách quan.`;
 
     try {
-      const response = await fetch('/api/generate-gemini', {
+      const response = await fetch('/api/generate-deepseek', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
@@ -580,7 +577,7 @@ Trình bày bằng Markdown, ngắn gọn, súc tích, chuyên nghiệp và khá
     setInlineEnhancements(prev => ({ ...prev, [title]: '' }));
 
     const prompt = `Bạn là một Kỹ sư Đổi mới Sáng tạo (Innovation Engineer) xuất chúng. Dựa trên ý tưởng ban đầu và bản so sánh với các sản phẩm đã có, hãy ĐỀ XUẤT THÊM CÁC TÍNH NĂNG/CẢI TIẾN ĐỘT PHÁ HƠN NỮA để ý tưởng này trở nên hoàn toàn khác biệt, cực kỳ sáng tạo, CHƯA AI LÀM và CÓ TÍNH ỨNG DỤNG CAO VÀO THỰC TẾ.
-Vui lòng SỬ DỤNG CÔNG CỤ TÌM KIẾM GOOGLE để tìm kiếm các công nghệ mới nhất có thể áp dụng.
+Hãy phân tích bằng DeepSeek V4 Pro, ưu tiên các hướng cải tiến mới, khả thi và có thể kiểm chứng.
 
 Ý TƯỞNG BAN ĐẦU:
 ${sectionContent}
@@ -598,7 +595,7 @@ YÊU CẦU NÂNG CẤP (Đóng vai trò GPT-4o/GPT-5 để sáng tạo):
 Trình bày bằng Markdown, văn phong hấp dẫn, truyền cảm hứng và rõ ràng.`;
 
     try {
-      const response = await fetch('/api/generate-gemini', {
+      const response = await fetch('/api/generate-deepseek', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
@@ -678,7 +675,7 @@ Trình bày bằng Markdown, văn phong hấp dẫn, truyền cảm hứng và r
 
     const prompt = `Bạn là chuyên gia đánh giá dự án khoa học kỹ thuật và đổi mới sáng tạo.
 Hãy phân tích khách quan ý tưởng sau bằng cách so sánh với sản phẩm/dự án tương tự đã có trên thị trường hoặc trên mạng.
-Vui lòng sử dụng Google Search để kiểm tra thông tin thực tế, không bịa nguồn.
+Hãy dùng DeepSeek V4 Pro để đối chiếu thực tế; chỉ nêu nguồn/link khi chắc chắn, không bịa nguồn.
 
 Ý TƯỞNG CẦN SO SÁNH:
 ${ideaContent}
@@ -692,7 +689,7 @@ YÊU CẦU:
 Trình bày bằng Markdown, rõ ràng, ngắn gọn và có tính thực tế.`;
 
     try {
-      const response = await fetch('/api/generate-gemini', {
+      const response = await fetch('/api/generate-deepseek', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -1266,7 +1263,7 @@ Trình bày bằng Markdown, rõ ràng, ngắn gọn và có tính thực tế.`
                     <span>Nâng cao</span>
                     {generationMode === 'advanced' && (
                       <span className="text-[10px] opacity-80 font-bold leading-none">
-                        ({advancedModel === 'gpt' ? 'GPT-5.4' : 'Gemini 3.1'})
+                        ({advancedModel === 'gpt' ? 'GPT-5.4' : 'DeepSeek V4 Pro'})
                       </span>
                     )}
                   </button>
@@ -1453,12 +1450,12 @@ Trình bày bằng Markdown, rõ ràng, ngắn gọn và có tính thực tế.`
                 <button
                   onClick={() => {
                     setGenerationMode('advanced');
-                    setAdvancedModel('gemini');
+                    setAdvancedModel('deepseek');
                     setShowAdvancedModal(false);
                   }}
                   className={cn(
                     "w-full p-4 rounded-xl border transition-all flex items-center justify-between group",
-                    advancedModel === 'gemini' && generationMode === 'advanced'
+                    advancedModel === 'deepseek' && generationMode === 'advanced'
                       ? "bg-teal-800 border-blue-500 shadow-sm shadow-blue-500/20"
                       : "bg-teal-800/30 border-teal-700/50 hover:bg-teal-700/50 hover:border-teal-500/50"
                   )}
@@ -1468,8 +1465,8 @@ Trình bày bằng Markdown, rõ ràng, ngắn gọn và có tính thực tế.`
                       <Sparkles className="w-5 h-5" />
                     </div>
                     <div className="text-left">
-                      <div className="font-bold text-teal-50">Gemini 3.1 Pro</div>
-                      <div className="text-xs text-teal-300">Sáng tạo đột phá, góc nhìn mới lạ</div>
+                      <div className="font-bold text-teal-50">DeepSeek V4 Pro</div>
+                      <div className="text-xs text-teal-300">Phân tích sâu, tư duy nâng cao</div>
                     </div>
                   </div>
                   <ChevronRight className="w-5 h-5 text-teal-500 group-hover:text-blue-400 transition-colors" />
@@ -1723,7 +1720,7 @@ Trình bày bằng Markdown, rõ ràng, ngắn gọn và có tính thực tế.`
                     </div>
                     <h3 className="text-xl font-bold mb-4 text-teal-50 text-center px-4">{loadingMessage}</h3>
                     <p className="font-medium text-center max-w-md text-teal-300">
-                      Hệ thống đang quét dữ liệu trên Google để đảm bảo các ý tưởng đề xuất có tính mới và sáng tạo cao nhất. Quá trình này có thể mất thêm chút thời gian.
+                      Hệ thống đang phân tích bằng AI nâng cao để đảm bảo các ý tưởng đề xuất có tính mới và sáng tạo cao nhất. Quá trình này có thể mất thêm chút thời gian.
                     </p>
                   </div>
                 ) : (
@@ -1800,7 +1797,7 @@ Trình bày bằng Markdown, rõ ràng, ngắn gọn và có tính thực tế.`
                     <Loader2 className="w-12 h-12 animate-spin mb-6 opacity-80" />
                     <h3 className="text-xl font-bold mb-2 text-teal-50">Đang phân tích và so sánh chuyên sâu...</h3>
                     <p className="font-medium text-center max-w-md text-teal-300">
-                      Hệ thống đang tìm kiếm các dự án tương tự trên Google để đưa ra đánh giá khách quan nhất.
+                      Hệ thống đang phân tích bằng DeepSeek V4 Pro để đưa ra đánh giá khách quan nhất.
                     </p>
                   </div>
                 ) : (

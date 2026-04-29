@@ -78,6 +78,14 @@ async function startServer() {
     return new OpenAI({ apiKey: key });
   }
 
+  function getDeepSeek(): OpenAI {
+    const key = process.env.DEEPSEEK_API_KEY;
+    if (!key) {
+      throw new Error("DEEPSEEK_API_KEY environment variable is required");
+    }
+    return new OpenAI({ apiKey: key, baseURL: "https://api.deepseek.com" });
+  }
+
   // Endpoint xác thực mã truy cập và khóa thiết bị
   app.post("/api/verify-passcode", (req, res) => {
     const { passcode, deviceId } = req.body;
@@ -221,6 +229,99 @@ async function startServer() {
         res.status(500).json({ 
           error: error.message || "Lỗi không xác định khi xử lý request" 
         });
+      } else if (!res.writableEnded) {
+        res.end();
+      }
+    }
+  });
+
+  app.post("/api/generate-deepseek", async (req, res) => {
+    try {
+      const { prompt, passcode, deviceId } = req.body;
+
+      if (!prompt || typeof prompt !== 'string' || prompt.trim().length === 0) {
+        return res.status(400).json({ error: "Prompt không hợp lệ hoặc bị thiếu." });
+      }
+
+      if (!passcode || !deviceId) {
+        return res.status(401).json({ error: "Thiếu thông tin xác thực. Vui lòng tải lại trang." });
+      }
+
+      const authResult = checkPasscodeValid(passcode, deviceId);
+      if (!authResult.valid) {
+        return res.status(403).json({
+          error: authResult.message,
+          isExpired: authResult.isExpired
+        });
+      }
+
+      res.setHeader("Content-Type", "text/event-stream");
+      res.setHeader("Cache-Control", "no-cache");
+      res.setHeader("Connection", "keep-alive");
+      res.setHeader("X-Accel-Buffering", "no");
+
+      const keepAliveInterval = setInterval(() => {
+        if (!res.writableEnded) {
+          res.write(': ping\n\n');
+        }
+      }, 15000);
+
+      req.on('close', () => {
+        clearInterval(keepAliveInterval);
+      });
+
+      try {
+        const deepseek = getDeepSeek();
+        const stream = await deepseek.chat.completions.create({
+          model: "deepseek-v4-pro",
+          messages: [{ role: "user", content: prompt }],
+          temperature: 0.85,
+          presence_penalty: 0.5,
+          frequency_penalty: 0.3,
+          max_tokens: 16384,
+          stream: true,
+        });
+
+        for await (const chunk of stream) {
+          if (res.writableEnded) break;
+          const content = chunk.choices[0]?.delta?.content || "";
+          if (content) {
+            res.write(`data: ${JSON.stringify({ text: content })}\n\n`);
+          }
+        }
+
+        if (!res.writableEnded) {
+          res.write("data: [DONE]\n\n");
+        }
+      } catch (streamError: any) {
+        console.error("DeepSeek API Stream Error:", streamError);
+
+        let errorMessage = "Lỗi không xác định từ DeepSeek API";
+        if (streamError.status === 401) {
+          errorMessage = "DeepSeek API Key không hợp lệ. Vui lòng kiểm tra cấu hình DEEPSEEK_API_KEY.";
+        } else if (streamError.status === 402) {
+          errorMessage = "Tài khoản DeepSeek không đủ số dư. Vui lòng kiểm tra Billing DeepSeek.";
+        } else if (streamError.status === 429) {
+          errorMessage = "DeepSeek đang giới hạn request hoặc quá tải. Vui lòng thử lại sau.";
+        } else if (streamError.status >= 500) {
+          errorMessage = "Dịch vụ DeepSeek tạm thời không khả dụng. Vui lòng thử lại sau.";
+        } else if (streamError.message) {
+          errorMessage = streamError.message;
+        }
+
+        if (!res.writableEnded) {
+          res.write(`data: ${JSON.stringify({ error: errorMessage })}\n\n`);
+        }
+      } finally {
+        clearInterval(keepAliveInterval);
+        if (!res.writableEnded) {
+          res.end();
+        }
+      }
+    } catch (error: any) {
+      console.error("DeepSeek API Error:", error);
+      if (!res.headersSent) {
+        res.status(500).json({ error: error.message || "Lỗi không xác định" });
       } else if (!res.writableEnded) {
         res.end();
       }

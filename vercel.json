@@ -3,6 +3,9 @@
     "api/generate.js": {
       "maxDuration": 300
     },
+    "api/generate-deepseek.js": {
+      "maxDuration": 300
+    },
     "api/generate-gemini.js": {
       "maxDuration": 300
     }
