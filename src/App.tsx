@@ -181,6 +181,9 @@ interface SavedSession {
     mucTieu: string;
     context: string;
     resources: string;
+    problem?: string;
+    avoidIdeas?: string;
+    localTraits?: string;
   };
   result: string;
   compareResult?: string;
@@ -291,6 +294,9 @@ export default function App() {
   const [mucTieu, setMucTieu] = useState(MUC_TIEU_OPTIONS[0]);
   const [context, setContext] = useState('');
   const [resources, setResources] = useState('');
+  const [problem, setProblem] = useState('');
+  const [avoidIdeas, setAvoidIdeas] = useState('');
+  const [localTraits, setLocalTraits] = useState('');
 
   const [isGenerating, setIsGenerating] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState('Đang khởi tạo IdeaGPT...');
@@ -409,6 +415,19 @@ export default function App() {
     writeIdeaMemory([...newEntries, ...getIdeaMemorySnapshot()]);
   };
 
+  const buildAdvancedContextPrompt = () => `
+THÔNG TIN BỐI CẢNH NÂNG CAO DO NGƯỜI DÙNG CUNG CẤP:
+- Vấn đề muốn giải quyết rõ nhất: ${problem || 'Không có'}
+- Ý tưởng đã có/không muốn trùng: ${avoidIdeas || 'Không có'}
+- Điểm riêng của địa phương/trường/lớp: ${localTraits || 'Không có'}
+
+CÁCH KHAI THÁC BỐI CẢNH NÂNG CAO:
+- Ưu tiên tạo ý tưởng bám sát vấn đề cụ thể người dùng nhập, không chỉ bám vào lĩnh vực chung.
+- Nếu người dùng liệt kê ý tưởng đã có hoặc không muốn trùng, tuyệt đối né các hướng đó và các biến thể quá gần.
+- Biến điểm riêng của địa phương/trường/lớp thành lợi thế sáng tạo để ý tưởng có dấu ấn riêng, khó trùng trên mạng.
+- Nếu thông tin địa phương có văn hóa, địa hình, khí hậu, thói quen học tập hoặc nguồn lực đặc biệt, hãy dùng chúng để tạo cơ chế giải pháp mới.
+  `;
+
   const generateIdeas = async (isReroll = false) => {
     setIsGenerating(true);
     setResult('');
@@ -464,6 +483,8 @@ THÔNG TIN ĐẦU VÀO:
 - Mục tiêu: ${mucTieu}
 - Bối cảnh: ${context || 'Không có'}
 - Nguồn lực: ${resources || 'Không có'}
+
+${buildAdvancedContextPrompt()}
 
 MÃ PHIÊN SÁNG TẠO: ${noveltySeed}
 Hãy dùng mã phiên này để mở một nhánh tư duy mới. Nếu người dùng bấm tạo nhiều lần với cùng thông tin đầu vào, kết quả lần sau vẫn phải khác hẳn lần trước.
@@ -710,6 +731,8 @@ THÔNG TIN ĐẦU VÀO:
 - Bối cảnh: ${context || 'Không có'}
 - Nguồn lực: ${resources || 'Không có'}
 
+${buildAdvancedContextPrompt()}
+
 PHẦN CUỐI KẾT QUẢ TRƯỚC ĐỂ TRÁNH TRÙNG LẶP:
 ${fullText.slice(-6000)}
         `;
@@ -737,7 +760,7 @@ ${fullText.slice(-6000)}
       setHistory(prev => [{
         id: newId,
         timestamp: Date.now(),
-        inputs: { field, capHoc, grade, techLimit, mucTieu, context, resources },
+        inputs: { field, capHoc, grade, techLimit, mucTieu, context, resources, problem, avoidIdeas, localTraits },
         result: fullText,
         mode: generationMode
       }, ...prev]);
@@ -936,6 +959,9 @@ THÔNG TIN HỌC SINH:
 - Giới hạn công nghệ: ${techLimit}
 - Nguồn lực đang có: ${resources || 'Không có'}
 - Bối cảnh: ${context || 'Không có'}
+- Vấn đề muốn giải quyết: ${problem || 'Không có'}
+- Ý tưởng đã có/không muốn trùng: ${avoidIdeas || 'Không có'}
+- Điểm riêng địa phương/trường/lớp: ${localTraits || 'Không có'}
 
 YÊU CẦU TRÌNH BÀY:
 1. Không viết lại toàn bộ phần phân tích ý tưởng. Chỉ tập trung vào cách làm thực tế.
@@ -1207,6 +1233,9 @@ Trình bày bằng Markdown, rõ ràng, ngắn gọn và có tính thực tế.`
       ['Mục tiêu', mucTieu],
       ['Bối cảnh', context || 'Không có'],
       ['Nguồn lực', resources || 'Không có'],
+      ['Vấn đề muốn giải quyết', problem || 'Không có'],
+      ['Ý tưởng đã có/không muốn trùng', avoidIdeas || 'Không có'],
+      ['Điểm riêng địa phương/trường/lớp', localTraits || 'Không có'],
       ['Ngày xuất file', new Date().toLocaleString('vi-VN')],
     ];
 
@@ -1468,6 +1497,9 @@ Trình bày bằng Markdown, rõ ràng, ngắn gọn và có tính thực tế.`
     setMucTieu(session.inputs.mucTieu);
     setContext(session.inputs.context);
     setResources(session.inputs.resources);
+    setProblem(session.inputs.problem || '');
+    setAvoidIdeas(session.inputs.avoidIdeas || '');
+    setLocalTraits(session.inputs.localTraits || '');
     setResult(session.result);
     setGenerationMode(session.mode || 'basic');
     setCompareResult(session.compareResult || '');
@@ -1985,6 +2017,52 @@ Trình bày bằng Markdown, rõ ràng, ngắn gọn và có tính thực tế.`
                 placeholder="Ví dụ: Có sẵn bìa carton, chai nhựa, biết lập trình Scratch..."
                 className="w-full p-3 bg-teal-900/50 border border-teal-700/50 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all min-h-[80px] resize-y text-teal-50 placeholder:text-teal-400/50"
               />
+            </div>
+
+            <div className="pt-2 border-t border-teal-800/50 space-y-5">
+              <div className="flex items-center gap-2 text-sm font-bold text-emerald-300">
+                <Lightbulb className="w-4 h-4" />
+                Bối cảnh nâng cao
+              </div>
+
+              <div className="space-y-2">
+                <label className="flex items-center gap-2 text-sm font-semibold text-teal-200">
+                  <Target className="w-4 h-4 text-teal-400" />
+                  Vấn đề muốn giải quyết <span className="text-teal-400/70 font-normal">(Tùy chọn)</span>
+                </label>
+                <textarea
+                  value={problem}
+                  onChange={(e) => setProblem(e.target.value)}
+                  placeholder="Ví dụ: học sinh dân tộc khó ghi nhớ từ vựng, ngại phát biểu, thiếu Internet..."
+                  className="w-full p-3 bg-teal-900/50 border border-teal-700/50 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all min-h-[82px] resize-y text-teal-50 placeholder:text-teal-400/50"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="flex items-center gap-2 text-sm font-semibold text-teal-200">
+                  <GitCompare className="w-4 h-4 text-teal-400" />
+                  Ý tưởng đã có/không muốn trùng <span className="text-teal-400/70 font-normal">(Tùy chọn)</span>
+                </label>
+                <textarea
+                  value={avoidIdeas}
+                  onChange={(e) => setAvoidIdeas(e.target.value)}
+                  placeholder="Ví dụ: không lấy app nhắc học, thùng rác thông minh, robot tưới cây..."
+                  className="w-full p-3 bg-teal-900/50 border border-teal-700/50 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all min-h-[82px] resize-y text-teal-50 placeholder:text-teal-400/50"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="flex items-center gap-2 text-sm font-semibold text-teal-200">
+                  <Layers className="w-4 h-4 text-teal-400" />
+                  Điểm riêng địa phương/trường/lớp <span className="text-teal-400/70 font-normal">(Tùy chọn)</span>
+                </label>
+                <textarea
+                  value={localTraits}
+                  onChange={(e) => setLocalTraits(e.target.value)}
+                  placeholder="Ví dụ: trường bán trú miền núi, văn hóa dân tộc, mùa mưa kéo dài, mạng yếu..."
+                  className="w-full p-3 bg-teal-900/50 border border-teal-700/50 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all min-h-[82px] resize-y text-teal-50 placeholder:text-teal-400/50"
+                />
+              </div>
             </div>
           </div>
         </div>
