@@ -301,7 +301,8 @@ export default function App() {
   const [isComparing, setIsComparing] = useState(false);
   const [inlineComparisons, setInlineComparisons] = useState<Record<string, string>>({});
   const [inlineEnhancements, setInlineEnhancements] = useState<Record<string, string>>({});
-  const [loadingInline, setLoadingInline] = useState<Record<string, 'comparing' | 'enhancing'>>({});
+  const [inlineDetailedGuides, setInlineDetailedGuides] = useState<Record<string, string>>({});
+  const [loadingInline, setLoadingInline] = useState<Record<string, 'comparing' | 'enhancing' | 'detailing'>>({});
   const [activeTab, setActiveTab] = useState<'main' | 'compare' | 'history' | 'favorites'>('main');
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
@@ -411,6 +412,10 @@ export default function App() {
   const generateIdeas = async (isReroll = false) => {
     setIsGenerating(true);
     setResult('');
+    setInlineComparisons({});
+    setInlineEnhancements({});
+    setInlineDetailedGuides({});
+    setLoadingInline({});
     setLoadingMessage('Đang phân tích yêu cầu và bối cảnh...');
     setActiveTab('main');
     if (window.innerWidth < 1024) {
@@ -485,6 +490,15 @@ RÀNG BUỘC BẮT BUỘC VỀ KẾT QUẢ:
 - Phải hoàn thành đủ từ ### 💡 Ý TƯỞNG 1 đến ### 💡 Ý TƯỞNG 20. Tuyệt đối không dừng ở Ý TƯỞNG 8, 10 hoặc 12.
 - Nếu cần rút gọn để đủ 20 ý tưởng, hãy rút gọn từng gạch đầu dòng nhưng vẫn giữ đủ 8 mục phân tích cho mỗi ý tưởng.
 - Chỉ viết TOP 3 sau khi đã trình bày xong Ý TƯỞNG 20.
+- Mỗi ý tưởng phải có điểm đánh giá theo thang 100 để người dùng lọc nhanh ý tưởng mạnh nhất.
+- KHÔNG viết phần "Cách làm chi tiết" trong kết quả chính. Ứng dụng sẽ có nút riêng để người dùng bấm khi cần AI hướng dẫn chi tiết.
+
+THANG ĐIỂM CHẤM MỖI Ý TƯỞNG:
+- Tính mới: 20 điểm
+- Tính sáng tạo: 20 điểm
+- Tính khả thi với học sinh ${grade}: 20 điểm
+- Tác động thực tiễn/học tập: 20 điểm
+- Bền vững, chi phí, khả năng nhân rộng: 20 điểm
 
 HÃY XUẤT KẾT QUẢ THEO ĐÚNG ĐỊNH DẠNG MARKDOWN SAU:
 
@@ -504,8 +518,8 @@ HÃY XUẤT KẾT QUẢ THEO ĐÚNG ĐỊNH DẠNG MARKDOWN SAU:
 - **Cơ chế hoạt động & Giải pháp:** (Mô tả rõ cách sản phẩm hoạt động, đơn giản nhưng thực tế cao)
 - **Kiến thức vận dụng:** (Học sinh cần vận dụng kiến thức môn học nào đã học để nghiên cứu dự án này?)
 - **Tính khả thi & Bền vững:** (Phân tích vật liệu, độ khó kỹ thuật, tính an toàn cho học sinh ${grade}, tác động môi trường, chi phí)
+- **Điểm đánh giá:** [Tổng điểm]/100 — Tính mới [x]/20; Sáng tạo [x]/20; Khả thi [x]/20; Tác động [x]/20; Bền vững [x]/20. (1 câu giải thích điểm)
 - **🛠 Cách làm ngắn gọn:** (3-5 bước chính, dễ hiểu, để học sinh nắm ngay lộ trình thực hiện)
-- **🔬 Cách làm chi tiết:** (Vật liệu/công cụ, quy trình lắp ráp hoặc lập trình, cách kiểm thử, tiêu chí đánh giá và hướng cải tiến)
 
 ### 💡 Ý TƯỞNG 2: [Tên ý tưởng thật ấn tượng, rõ nghĩa]
 ... (Tương tự như trên)
@@ -674,8 +688,9 @@ NHIỆM VỤ BẮT BUỘC:
 2. Bắt đầu chính xác bằng heading: ### 💡 Ý TƯỞNG ${nextIdeaNumber}: [Tên ý tưởng]
 3. Viết tiếp đầy đủ đến ### 💡 Ý TƯỞNG 20.
 4. Sau Ý TƯỞNG 20, viết mục ## 🏆 4. TOP 3 Ý TƯỞNG "CHAMPION" (KHUYÊN CHỌN NHẤT).
-5. Giữ đúng cấu trúc 8 gạch đầu dòng cho mỗi ý tưởng: Vấn đề & Ý nghĩa thực tiễn; So sánh với giải pháp cũ; Tính năng nổi bật duy nhất; Cơ chế hoạt động & Giải pháp; Kiến thức vận dụng; Tính khả thi & Bền vững; Cách làm ngắn gọn; Cách làm chi tiết.
+5. Giữ đúng cấu trúc 8 gạch đầu dòng cho mỗi ý tưởng: Vấn đề & Ý nghĩa thực tiễn; So sánh với giải pháp cũ; Tính năng nổi bật duy nhất; Cơ chế hoạt động & Giải pháp; Kiến thức vận dụng; Tính khả thi & Bền vững; Điểm đánh giá; Cách làm ngắn gọn.
 6. Mọi ý tưởng viết tiếp phải khác hoàn toàn các ý tưởng trong bộ nhớ cũ và khác các ý tưởng đã có ở phần trước.
+7. KHÔNG viết phần "Cách làm chi tiết"; phần này chỉ sinh khi người dùng bấm nút riêng.
 
 KHO Ý TƯỞNG ĐÃ CÓ TRÊN MÁY NGƯỜI DÙNG (DANH SÁCH CẦN TRÁNH):
 ${ideaExclusionList}
@@ -890,6 +905,98 @@ Trình bày bằng Markdown, văn phong hấp dẫn, truyền cảm hứng và r
     } catch (error: any) {
       console.error('Enhance error:', error);
       setInlineEnhancements(prev => ({ ...prev, [title]: `🚨 Đã xảy ra lỗi: ${error.message || 'Vui lòng thử lại.'}` }));
+    } finally {
+      setLoadingInline(prev => {
+        const newState = { ...prev };
+        delete newState[title];
+        return newState;
+      });
+    }
+  };
+
+  const handleInlineDetailedGuide = async (title: string, sectionContent: string) => {
+    setLoadingInline(prev => ({ ...prev, [title]: 'detailing' }));
+    setInlineDetailedGuides(prev => ({ ...prev, [title]: '' }));
+
+    const prompt = `Bạn là giáo viên hướng dẫn học sinh làm dự án sáng tạo khoa học kỹ thuật. Hãy viết HƯỚNG DẪN CÁCH LÀM CHI TIẾT cho đúng ý tưởng dưới đây.
+
+Ý TƯỞNG CẦN HƯỚNG DẪN:
+${sectionContent}
+
+THÔNG TIN HỌC SINH:
+- Cấp học: ${capHoc}
+- Lớp: ${grade}
+- Giới hạn công nghệ: ${techLimit}
+- Nguồn lực đang có: ${resources || 'Không có'}
+- Bối cảnh: ${context || 'Không có'}
+
+YÊU CẦU TRÌNH BÀY:
+1. Không viết lại toàn bộ phần phân tích ý tưởng. Chỉ tập trung vào cách làm thực tế.
+2. Chia thành các mục rõ ràng:
+   - Mục tiêu sản phẩm/mô hình
+   - Vật liệu, công cụ, phần mềm cần chuẩn bị
+   - Sơ đồ nguyên lý hoặc luồng hoạt động bằng chữ
+   - Quy trình làm từng bước
+   - Cách kiểm thử, đo đạc, ghi kết quả
+   - Tiêu chí đánh giá sản phẩm hoàn thành
+   - Lỗi thường gặp và cách khắc phục
+   - Cách nâng cấp nếu còn thời gian
+3. Phù hợp với học sinh ${grade}, ưu tiên vật liệu dễ kiếm, an toàn, chi phí thấp.
+4. Trình bày bằng Markdown, ngắn gọn nhưng đủ chi tiết để học sinh có thể bắt tay làm ngay.`;
+
+    try {
+      const response = await fetch('/api/generate-deepseek', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          prompt,
+          passcode: localStorage.getItem('savedPasscode'),
+          deviceId: getDeviceId()
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to generate detailed guide');
+      }
+
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+      let done = false;
+      let buffer = '';
+      let fullText = '';
+
+      while (!done && reader) {
+        const { value, done: readerDone } = await reader.read();
+        done = readerDone;
+        if (value) {
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split('\n');
+          buffer = lines.pop() || '';
+
+          for (const line of lines) {
+            if (line.startsWith('data: ') && line !== 'data: [DONE]') {
+              try {
+                const data = JSON.parse(line.slice(6));
+                if (data.error) {
+                  throw new Error(data.error);
+                }
+                if (data.text) {
+                  fullText += data.text;
+                  setInlineDetailedGuides(prev => ({ ...prev, [title]: fullText }));
+                }
+              } catch (e) {
+                if (e instanceof Error && e.message !== "Unexpected end of JSON input" && !e.message.includes("JSON")) {
+                  throw e;
+                }
+              }
+            }
+          }
+        }
+      }
+    } catch (error: any) {
+      console.error('Detailed guide error:', error);
+      setInlineDetailedGuides(prev => ({ ...prev, [title]: `🚨 Đã xảy ra lỗi: ${error.message || 'Vui lòng thử lại.'}` }));
     } finally {
       setLoadingInline(prev => {
         const newState = { ...prev };
@@ -1147,6 +1254,10 @@ Trình bày bằng Markdown, rõ ràng, ngắn gọn và có tính thực tế.`
         continue;
       }
 
+      if (/Cách làm chi tiết/i.test(line)) {
+        continue;
+      }
+
       // Handle Headings
       if (line.startsWith('### ')) {
         inList = false;
@@ -1353,6 +1464,10 @@ Trình bày bằng Markdown, rõ ràng, ngắn gọn và có tính thực tế.`
     setResult(session.result);
     setGenerationMode(session.mode || 'basic');
     setCompareResult(session.compareResult || '');
+    setInlineComparisons({});
+    setInlineEnhancements({});
+    setInlineDetailedGuides({});
+    setLoadingInline({});
     setCurrentSessionId(session.id);
     setActiveTab('main');
     if (window.innerWidth < 1024) {
@@ -1386,6 +1501,15 @@ Trình bày bằng Markdown, rõ ràng, ngắn gọn và có tính thực tế.`
       const isIdea = part.includes('Ý TƯỞNG') && !part.includes('TOP 3');
       const titleMatch = part.match(/^#{2,3} (.*)/m);
       const title = titleMatch ? titleMatch[1].replace('💡', '').trim() : '';
+      const scoreMatch = part.match(/\*\*Điểm đánh giá:\*\*\s*(\d{1,3})\s*\/\s*100/i);
+      const ideaScore = scoreMatch ? Math.min(100, Math.max(0, Number(scoreMatch[1]))) : null;
+      const scoreClass = ideaScore === null
+        ? 'bg-teal-900/40 text-teal-300 border-teal-700/50'
+        : ideaScore >= 85
+          ? 'bg-emerald-900/40 text-emerald-300 border-emerald-700/50'
+          : ideaScore >= 70
+            ? 'bg-amber-900/40 text-amber-300 border-amber-700/50'
+            : 'bg-rose-900/40 text-rose-300 border-rose-700/50';
 
       return (
         <div key={index} className={isIdea ? "mb-12" : "mb-8"}>
@@ -1399,6 +1523,24 @@ Trình bày bằng Markdown, rõ ràng, ngắn gọn và có tính thực tế.`
           {isIdea && title && (
             <div className="mt-6 flex flex-col gap-4">
               <div className="flex flex-wrap items-center gap-3">
+                <div className={cn("px-4 py-2 rounded-xl font-bold text-sm border flex items-center gap-2 shadow-sm", scoreClass)}>
+                  <Target className="w-4 h-4" />
+                  {ideaScore !== null ? `Điểm: ${ideaScore}/100` : 'Chưa có điểm'}
+                </div>
+
+                <button
+                  onClick={() => handleInlineDetailedGuide(title, part)}
+                  disabled={loadingInline[title] === 'detailing'}
+                  className="px-4 py-2 rounded-xl font-semibold text-sm bg-emerald-900/40 text-emerald-300 border border-emerald-700/50 hover:bg-emerald-800/50 transition-colors flex items-center gap-2 shadow-sm"
+                >
+                  {loadingInline[title] === 'detailing' ? <Loader2 className="w-4 h-4 animate-spin" /> : <BookOpen className="w-4 h-4" />}
+                  {loadingInline[title] === 'detailing'
+                    ? 'Đang viết chi tiết'
+                    : inlineDetailedGuides[title]
+                      ? 'Tạo lại hướng dẫn'
+                      : 'Hướng dẫn chi tiết'}
+                </button>
+
                 <button
                   onClick={() => handleInlineCompare(title, part)}
                   disabled={loadingInline[title] === 'comparing'}
@@ -1419,6 +1561,21 @@ Trình bày bằng Markdown, rõ ràng, ngắn gọn và có tính thực tế.`
                   </button>
                 )}
               </div>
+
+              {inlineDetailedGuides[title] && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="p-6 rounded-2xl bg-emerald-950/30 border border-emerald-800/50 shadow-inner mt-2"
+                >
+                  <h4 className="text-lg font-bold text-emerald-400 mb-4 flex items-center gap-2 border-b border-emerald-800/50 pb-3">
+                    <BookOpen className="w-5 h-5" /> Hướng dẫn cách làm chi tiết
+                  </h4>
+                  <div className="prose prose-invert max-w-none prose-p:text-emerald-100/90 prose-li:text-emerald-100/90 prose-strong:text-emerald-300 prose-headings:text-emerald-200">
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>{inlineDetailedGuides[title]}</ReactMarkdown>
+                  </div>
+                </motion.div>
+              )}
 
               {inlineComparisons[title] && (
                 <motion.div 
@@ -1510,7 +1667,22 @@ Trình bày bằng Markdown, rõ ràng, ngắn gọn và có tính thực tế.`
     },
     ul: ({node, ...props}: any) => <ul className="space-y-3 mb-6 pl-6 list-disc marker:text-emerald-400" {...props} />,
     ol: ({node, ...props}: any) => <ol className="space-y-4 mb-6 pl-6 list-decimal marker:text-emerald-400 marker:font-bold" {...props} />,
-    li: ({node, ...props}: any) => <li className="text-teal-50/90 leading-relaxed pl-1" {...props} />,
+    li: ({node, children, ...props}: any) => {
+      const extractText = (childArray: any): string => {
+        if (!childArray) return '';
+        if (typeof childArray === 'string') return childArray;
+        if (Array.isArray(childArray)) return childArray.map(extractText).join('');
+        if (childArray.props && childArray.props.children) return extractText(childArray.props.children);
+        return '';
+      };
+      const text = extractText(children);
+
+      if (/Cách làm chi tiết/i.test(text)) {
+        return null;
+      }
+
+      return <li className="text-teal-50/90 leading-relaxed pl-1" {...props}>{children}</li>;
+    },
     strong: ({node, ...props}: any) => <strong className="text-emerald-300 font-semibold tracking-wide" {...props} />,
     p: ({node, ...props}: any) => <p className="text-teal-50/90 leading-relaxed mb-5 text-[1.05rem]" {...props} />,
     blockquote: ({node, ...props}: any) => <blockquote className="border-l-4 border-emerald-500 bg-gradient-to-r from-emerald-900/20 to-transparent p-5 rounded-r-2xl italic text-teal-100 my-8 shadow-sm" {...props} />,
