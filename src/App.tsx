@@ -1420,7 +1420,7 @@ Trình bày bằng Markdown, rõ ràng, ngắn gọn và có tính thực tế.`
     }
   };
 
-  const generateAndDownloadWordDoc = async (content: string, title: string) => {
+  const generateAndDownloadWordDoc = async (content: string, title: string, summaryOnly = false) => {
     const colors = {
       primary: '0F766E',
       primaryDark: '134E4A',
@@ -1510,6 +1510,87 @@ Trình bày bằng Markdown, rõ ràng, ngắn gọn và có tính thực tế.`
 
     const border = { style: BorderStyle.SINGLE, size: 4, color: colors.line };
     const cellMargins = { top: 130, bottom: 130, left: 180, right: 180 };
+
+    const cleanSummaryText = (value: string) => value
+      .replace(/\*\*/g, '')
+      .replace(/`/g, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    const truncateSummary = (value: string, maxLength = 260) => {
+      const cleaned = cleanSummaryText(value);
+      if (cleaned.length <= maxLength) return cleaned;
+      return `${cleaned.slice(0, maxLength - 1).replace(/\s+\S*$/, '')}…`;
+    };
+
+    const extractBulletValue = (section: string, labels: string[]) => {
+      const lines = section.split('\n').map(line => line.trim());
+
+      for (const label of labels) {
+        const target = label.toLowerCase();
+        const line = lines.find(item => {
+          const normalized = item
+            .replace(/^[-*]\s*/, '')
+            .replace(/^\*\*/, '')
+            .toLowerCase();
+          return normalized.startsWith(`${target}:`);
+        });
+
+        if (line) {
+          return cleanSummaryText(line
+            .replace(/^[-*]\s*/, '')
+            .replace(/^\*\*/, '')
+            .replace(new RegExp(`^${label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}:\\*?\\*?\\s*`, 'i'), '')
+          );
+        }
+      }
+
+      return '';
+    };
+
+    const extractIdeaSummaries = () => {
+      const sections = content
+        .split(/(?=^###\s*(?:💡\s*)?Ý TƯỞNG\s+\d+\s*:)/m)
+        .filter(section => /^###\s*(?:💡\s*)?Ý TƯỞNG\s+\d+\s*:/m.test(section));
+
+      return sections.map(section => {
+        const cleanedSection = section.split(/^##\s+🏆/m)[0];
+        const titleMatch = cleanedSection.match(/^###\s*(?:💡\s*)?Ý TƯỞNG\s+(\d+)\s*:\s*(.+)$/m);
+        const number = titleMatch?.[1] || '';
+        const ideaTitle = cleanSummaryText(titleMatch?.[2] || 'Không có tiêu đề');
+        const scoreMatch = cleanedSection.match(/\*\*(?:Điểm đánh giá|Điểm rubric KHKT):\*\*[\s\S]{0,100}?(\d{1,3})\s*\/\s*100/i);
+        const score = scoreMatch ? `${scoreMatch[1]}/100` : '';
+        const summaryLabels = isKhktContest
+          ? [
+              ['Loại dự án & lĩnh vực'],
+              ['Câu hỏi/Vấn đề nghiên cứu'],
+              ['Mục tiêu & tiêu chí thành công'],
+              ['Giải pháp/Giả thuyết cốt lõi'],
+              ['Thực hiện và kiểm chứng'],
+            ]
+          : [
+              ['Vấn đề & Ý nghĩa thực tiễn'],
+              ['Tính năng nổi bật duy nhất'],
+              ['Cơ chế hoạt động & Giải pháp'],
+              ['Kiến thức vận dụng'],
+              ['Tính khả thi & Bền vững'],
+            ];
+        const summary = summaryLabels
+          .map(labels => extractBulletValue(cleanedSection, labels))
+          .filter(Boolean)
+          .slice(0, 3)
+          .map(value => truncateSummary(value, 170))
+          .join(' ');
+
+        return {
+          number,
+          title: ideaTitle,
+          summary: summary || truncateSummary(cleanedSection.replace(/^###.*$/m, ''), 260),
+          score,
+        };
+      });
+    };
+
     const inputRows = [
       ['Cuộc thi', contestMeta.title],
       ['Lĩnh vực', field],
@@ -1563,113 +1644,188 @@ Trình bày bằng Markdown, rõ ràng, ngắn gọn và có tính thực tế.`
 
     const bodyBlocks: (Paragraph | Table)[] = [];
 
-    const lines = content.split('\n');
-    let inList = false;
-
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i].trim();
-      
-      if (!line) {
-        // Empty line, add some spacing if not in a list
-        if (!inList) {
-           bodyBlocks.push(new Paragraph({ text: "", spacing: { after: 80 } }));
-        }
-        continue;
-      }
-
-      if (/Cách làm chi tiết/i.test(line)) {
-        continue;
-      }
-
-      // Handle Headings
-      if (line.startsWith('### ')) {
-        inList = false;
-        const text = line.replace(/^### /, '').trim();
-        const isIdeaHeading = text.includes('Ý TƯỞNG');
-        bodyBlocks.push(
+    if (summaryOnly) {
+      const ideaSummaries = extractIdeaSummaries();
+      const summaryCell = (
+        text: string,
+        options: { width: number; bold?: boolean; fill?: string; color?: string; size?: number; center?: boolean } = { width: 25 }
+      ) => new TableCell({
+        width: { size: options.width, type: WidthType.PERCENTAGE },
+        margins: { top: 120, bottom: 120, left: 130, right: 130 },
+        shading: options.fill ? { type: ShadingType.CLEAR, fill: options.fill, color: 'auto' } : undefined,
+        children: [
           new Paragraph({
-            children: parseMarkdownLine(text, {
-              bold: true,
-              size: isIdeaHeading ? 27 : 25,
-              color: colors.primaryDark,
+            alignment: options.center ? AlignmentType.CENTER : undefined,
+            children: [new TextRun({
+              text,
+              bold: options.bold || false,
+              color: options.color || colors.text,
+              font: 'Arial',
+              size: options.size || 20,
+            })],
+          }),
+        ],
+      });
+
+      bodyBlocks.push(
+        new Paragraph({
+          children: [new TextRun({
+            text: isKhktContest ? 'DANH SÁCH ĐỀ TÀI KHKT TÓM TẮT' : 'DANH SÁCH Ý TƯỞNG TÓM TẮT',
+            bold: true,
+            color: colors.primary,
+            font: 'Arial',
+            size: 32,
+          })],
+          heading: HeadingLevel.HEADING_1,
+          spacing: { before: 120, after: 240 },
+          alignment: AlignmentType.CENTER,
+        })
+      );
+
+      if (ideaSummaries.length === 0) {
+        bodyBlocks.push(new Paragraph({
+          children: [new TextRun({ text: 'Không tìm thấy danh sách ý tưởng trong nội dung hiện tại.', ...normalRun })],
+        }));
+      } else {
+        bodyBlocks.push(new Table({
+          width: { size: 100, type: WidthType.PERCENTAGE },
+          borders: {
+            top: border,
+            bottom: border,
+            left: border,
+            right: border,
+            insideHorizontal: border,
+            insideVertical: border,
+          },
+          rows: [
+            new TableRow({
+              children: [
+                summaryCell('STT', { width: 8, bold: true, fill: colors.primaryDark, color: colors.white, center: true }),
+                summaryCell(isKhktContest ? 'Đề tài' : 'Ý tưởng', { width: 30, bold: true, fill: colors.primaryDark, color: colors.white }),
+                summaryCell('Tóm tắt ngắn gọn', { width: 50, bold: true, fill: colors.primaryDark, color: colors.white }),
+                summaryCell('Điểm', { width: 12, bold: true, fill: colors.primaryDark, color: colors.white, center: true }),
+              ],
             }),
-            heading: HeadingLevel.HEADING_3,
-            spacing: { before: isIdeaHeading ? 360 : 220, after: 140 },
-            shading: isIdeaHeading ? { type: ShadingType.CLEAR, fill: colors.soft, color: 'auto' } : undefined,
-            border: isIdeaHeading ? {
-              left: { style: BorderStyle.SINGLE, size: 18, color: colors.accent, space: 8 },
-              bottom: { style: BorderStyle.SINGLE, size: 4, color: colors.line, space: 2 },
-            } : undefined,
-          })
-        );
-      } else if (line.startsWith('## ')) {
-        inList = false;
-        const text = line.replace(/^## /, '').trim();
-        bodyBlocks.push(
-          new Paragraph({
-            children: [new TextRun({ text, bold: true, color: colors.primary, font: 'Arial', size: 30 })],
-            heading: HeadingLevel.HEADING_2,
-            spacing: { before: 420, after: 180 },
-            border: {
-              bottom: { style: BorderStyle.SINGLE, size: 8, color: colors.accent, space: 4 },
-            },
-          })
-        );
-      } else if (line.startsWith('# ')) {
-        inList = false;
-        const text = line.replace(/^# /, '').trim();
-        bodyBlocks.push(
-          new Paragraph({
-            children: [new TextRun({ text, bold: true, color: colors.primaryDark, font: 'Arial', size: 32 })],
-            heading: HeadingLevel.HEADING_1,
-            spacing: { before: 480, after: 240 },
-          })
-        );
-      } 
-      // Handle Lists
-      else if (line.startsWith('- ') || line.startsWith('* ')) {
-        inList = true;
-        const text = line.replace(/^[-*] /, '').trim();
-        bodyBlocks.push(
-          new Paragraph({
-            children: parseMarkdownLine(text),
-            bullet: { level: 0 },
-            spacing: { after: 95, line: 330 },
-            indent: { left: 520, hanging: 220 },
-          })
-        );
-      } else if (line.match(/^\d+\.\s/)) {
-         inList = true;
-         const text = line.replace(/^\d+\.\s/, '').trim();
-         bodyBlocks.push(
-          new Paragraph({
-            children: parseMarkdownLine(text),
-            numbering: { reference: "decimal-numbering", level: 0 },
-            spacing: { after: 95, line: 330 },
-          })
-        );
+            ...ideaSummaries.map((idea, index) => new TableRow({
+              children: [
+                summaryCell(idea.number || String(index + 1), { width: 8, center: true, bold: true, color: colors.primaryDark }),
+                summaryCell(idea.title, { width: 30, bold: true, color: colors.primaryDark }),
+                summaryCell(idea.summary, { width: 50 }),
+                summaryCell(idea.score || '-', { width: 12, center: true, bold: true, color: colors.primaryDark }),
+              ],
+            })),
+          ],
+        }));
       }
-      // Handle Horizontal Rule
-      else if (line === '---' || line === '***' || line === '___') {
-         inList = false;
-         bodyBlocks.push(
-           new Paragraph({
-             text: "__________________________________________________",
-             alignment: AlignmentType.CENTER,
-             spacing: { before: 120, after: 120 }
-           })
-         );
-      }
-      // Normal Paragraph
-      else {
-        inList = false;
-        bodyBlocks.push(
-          new Paragraph({
-            children: parseMarkdownLine(line),
-            spacing: { after: 130, line: 340 },
-            alignment: AlignmentType.JUSTIFIED,
-          })
-        );
+    } else {
+      const lines = content.split('\n');
+      let inList = false;
+
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i].trim();
+        
+        if (!line) {
+          // Empty line, add some spacing if not in a list
+          if (!inList) {
+             bodyBlocks.push(new Paragraph({ text: "", spacing: { after: 80 } }));
+          }
+          continue;
+        }
+
+        if (/Cách làm chi tiết/i.test(line)) {
+          continue;
+        }
+
+        // Handle Headings
+        if (line.startsWith('### ')) {
+          inList = false;
+          const text = line.replace(/^### /, '').trim();
+          const isIdeaHeading = text.includes('Ý TƯỞNG');
+          bodyBlocks.push(
+            new Paragraph({
+              children: parseMarkdownLine(text, {
+                bold: true,
+                size: isIdeaHeading ? 27 : 25,
+                color: colors.primaryDark,
+              }),
+              heading: HeadingLevel.HEADING_3,
+              spacing: { before: isIdeaHeading ? 360 : 220, after: 140 },
+              shading: isIdeaHeading ? { type: ShadingType.CLEAR, fill: colors.soft, color: 'auto' } : undefined,
+              border: isIdeaHeading ? {
+                left: { style: BorderStyle.SINGLE, size: 18, color: colors.accent, space: 8 },
+                bottom: { style: BorderStyle.SINGLE, size: 4, color: colors.line, space: 2 },
+              } : undefined,
+            })
+          );
+        } else if (line.startsWith('## ')) {
+          inList = false;
+          const text = line.replace(/^## /, '').trim();
+          bodyBlocks.push(
+            new Paragraph({
+              children: [new TextRun({ text, bold: true, color: colors.primary, font: 'Arial', size: 30 })],
+              heading: HeadingLevel.HEADING_2,
+              spacing: { before: 420, after: 180 },
+              border: {
+                bottom: { style: BorderStyle.SINGLE, size: 8, color: colors.accent, space: 4 },
+              },
+            })
+          );
+        } else if (line.startsWith('# ')) {
+          inList = false;
+          const text = line.replace(/^# /, '').trim();
+          bodyBlocks.push(
+            new Paragraph({
+              children: [new TextRun({ text, bold: true, color: colors.primaryDark, font: 'Arial', size: 32 })],
+              heading: HeadingLevel.HEADING_1,
+              spacing: { before: 480, after: 240 },
+            })
+          );
+        } 
+        // Handle Lists
+        else if (line.startsWith('- ') || line.startsWith('* ')) {
+          inList = true;
+          const text = line.replace(/^[-*] /, '').trim();
+          bodyBlocks.push(
+            new Paragraph({
+              children: parseMarkdownLine(text),
+              bullet: { level: 0 },
+              spacing: { after: 95, line: 330 },
+              indent: { left: 520, hanging: 220 },
+            })
+          );
+        } else if (line.match(/^\d+\.\s/)) {
+           inList = true;
+           const text = line.replace(/^\d+\.\s/, '').trim();
+           bodyBlocks.push(
+            new Paragraph({
+              children: parseMarkdownLine(text),
+              numbering: { reference: "decimal-numbering", level: 0 },
+              spacing: { after: 95, line: 330 },
+            })
+          );
+        }
+        // Handle Horizontal Rule
+        else if (line === '---' || line === '***' || line === '___') {
+           inList = false;
+           bodyBlocks.push(
+             new Paragraph({
+               text: "__________________________________________________",
+               alignment: AlignmentType.CENTER,
+               spacing: { before: 120, after: 120 }
+             })
+           );
+        }
+        // Normal Paragraph
+        else {
+          inList = false;
+          bodyBlocks.push(
+            new Paragraph({
+              children: parseMarkdownLine(line),
+              spacing: { after: 130, line: 340 },
+              alignment: AlignmentType.JUSTIFIED,
+            })
+          );
+        }
       }
     }
 
@@ -1739,7 +1895,15 @@ Trình bày bằng Markdown, rõ ràng, ngắn gọn và có tính thực tế.`
             new Paragraph({
               alignment: AlignmentType.CENTER,
               spacing: { after: 260 },
-              children: [new TextRun({ text: contestMeta.docTitle.toUpperCase(), bold: true, color: colors.primaryDark, font: 'Arial', size: 36 })],
+              children: [new TextRun({
+                text: summaryOnly
+                  ? (isKhktContest ? 'DANH SÁCH ĐỀ TÀI KHKT TÓM TẮT' : 'DANH SÁCH Ý TƯỞNG TÓM TẮT')
+                  : contestMeta.docTitle.toUpperCase(),
+                bold: true,
+                color: colors.primaryDark,
+                font: 'Arial',
+                size: 36,
+              })],
             }),
             new Paragraph({
               alignment: AlignmentType.CENTER,
@@ -1752,7 +1916,9 @@ Trình bày bằng Markdown, rõ ràng, ngắn gọn và có tính thực tế.`
               alignment: AlignmentType.CENTER,
               children: [
                 new TextRun({
-                  text: 'Tài liệu được định dạng tự động: tiêu đề, phân mục, danh sách, bảng thông tin và số trang.',
+                  text: summaryOnly
+                    ? 'Tài liệu tóm tắt tự động: chỉ gồm danh sách ý tưởng/đề tài, mô tả ngắn và điểm đánh giá.'
+                    : 'Tài liệu được định dạng tự động: tiêu đề, phân mục, danh sách, bảng thông tin và số trang.',
                   italics: true,
                   color: colors.muted,
                   font: 'Arial',
@@ -1769,7 +1935,7 @@ Trình bày bằng Markdown, rõ ràng, ngắn gọn và có tính thực tế.`
 
     try {
       const blob = await Packer.toBlob(doc);
-      saveAs(blob, `${makeFileName(title)}.docx`);
+      saveAs(blob, `${makeFileName(summaryOnly ? `${title} tóm tắt` : title)}.docx`);
     } catch (error) {
       console.error('Error generating or downloading Word document:', error);
       alert('Đã có lỗi xảy ra khi tạo file Word. Vui lòng thử lại.');
@@ -2836,6 +3002,15 @@ Trình bày bằng Markdown, rõ ràng, ngắn gọn và có tính thực tế.`
                         >
                           <Download className="w-4 h-4" />
                           Tải Word
+                        </button>
+                        <button
+                          onClick={() => {
+                            generateAndDownloadWordDoc(result, `${isKhktContest ? 'Đề tài KHKT' : 'Ý Tưởng Sáng Tạo'} - ${field}`, true);
+                          }}
+                          className="px-5 py-2.5 bg-emerald-900/30 text-emerald-300 hover:bg-emerald-800/40 border border-emerald-700/50 rounded-xl font-semibold flex items-center justify-center gap-2 transition-all shadow-sm active:scale-[0.98]"
+                        >
+                          <Download className="w-4 h-4" />
+                          Word tóm tắt
                         </button>
                       </div>
                       
