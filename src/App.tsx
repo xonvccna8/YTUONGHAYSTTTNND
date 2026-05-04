@@ -154,6 +154,13 @@ type KhktFieldGuide = {
   feasibleEvidence: string;
 };
 
+type CreativeFieldGuide = {
+  officialScope: string;
+  productFocus: string;
+  breakthroughAngles: string[];
+  feasibleEvidence: string;
+};
+
 const CONTEST_OPTIONS: {
   id: ContestType;
   label: string;
@@ -187,12 +194,101 @@ const CONTEST_OPTIONS: {
 ];
 
 const CREATIVE_FIELD_OPTIONS = [
-  'Đồ dùng học tập',
-  'Phần mềm tin học',
-  'Sản phẩm thân thiện môi trường',
-  'Dụng cụ sinh hoạt gia đình & đồ chơi',
-  'Giải pháp kỹ thuật liên quan cuộc sống và bảo vệ môi trường',
+  'Đồ dùng dành cho học tập',
+  'Phần mềm tin học và chuyển đổi số',
+  'Sản phẩm thân thiện với môi trường',
+  'Các dụng cụ sinh hoạt gia đình và đồ chơi trẻ em',
+  'Các giải pháp kỹ thuật nhằm ứng phó với biến đổi khí hậu, bảo vệ môi trường và phát triển kinh tế',
 ];
+
+const CREATIVE_FIELD_GUIDES: Record<string, CreativeFieldGuide> = {
+  'Đồ dùng dành cho học tập': {
+    officialScope: 'Mô hình, thiết bị, bộ học liệu, dụng cụ thí nghiệm, đồ dùng hỗ trợ tự học, dạy học, trải nghiệm STEM, giáo dục hòa nhập và học tập an toàn.',
+    productFocus: 'Sản phẩm phải giúp học sinh hoặc giáo viên học/dạy tốt hơn bằng một cơ chế cụ thể: trực quan hóa kiến thức, luyện tập cá nhân hóa, đo - phản hồi, hỗ trợ khuyết tật, giảm chi phí hoặc tăng hứng thú học.',
+    breakthroughAngles: [
+      'Đồ dùng học tập có phản hồi thông minh: đo lỗi, gợi ý bước tiếp theo, cá nhân hóa cho từng học sinh.',
+      'Bộ học liệu vật lý số kết hợp mô hình thật với cảm biến/AR/AI nhưng vẫn rẻ, dễ làm và dùng được ở lớp học Việt Nam.',
+      'Thiết bị hỗ trợ nhóm học sinh yếu thế: khiếm thị, nghe kém, rối loạn đọc, học sinh vùng khó khăn hoặc thiếu Internet.'
+    ],
+    feasibleEvidence: 'Mô hình hoạt động được, kịch bản dùng trong tiết học, so sánh trước - sau hoặc nhóm đối chứng nhỏ, khảo sát giáo viên/học sinh, chi phí chế tạo, độ bền và mức độ an toàn.'
+  },
+  'Phần mềm tin học và chuyển đổi số': {
+    officialScope: 'Website, hệ thống số, ứng dụng máy tính/di động, phần mềm điều khiển, AI, dữ liệu, tự động hóa quy trình và giải pháp chuyển đổi số phục vụ học tập, gia đình, cộng đồng.',
+    productFocus: 'Không chỉ làm app đẹp; phải có thuật toán, dữ liệu, luồng nghiệp vụ hoặc mô hình chuyển đổi số giải quyết một việc thật, có người dùng thật và đo được hiệu quả.',
+    breakthroughAngles: [
+      'AI trợ lý học tập, sức khỏe, môi trường hoặc văn hóa địa phương có dữ liệu riêng, kiểm soát sai lệch và giải thích được.',
+      'Nền tảng chuyển đổi số cho trường/lớp/xã: giảm thao tác thủ công, minh bạch dữ liệu, có dashboard và quyền truy cập rõ.',
+      'Phần mềm kết nối với phần cứng/IoT để điều khiển, cảnh báo, thu thập dữ liệu hoặc tự động hóa quy trình thực tế.'
+    ],
+    feasibleEvidence: 'Demo chạy được, tài khoản/đường dẫn truy cập, bộ cài hoặc video giả lập, dữ liệu mẫu, sơ đồ luồng, metric như độ chính xác/thời gian xử lý/tỉ lệ hoàn thành, khảo sát người dùng và kê khai thư viện bên thứ ba.'
+  },
+  'Sản phẩm thân thiện với môi trường': {
+    officialScope: 'Sản phẩm sử dụng vật liệu xanh, tái chế, tái sử dụng, tiết kiệm tài nguyên, giảm rác thải, giảm ô nhiễm hoặc thay thế vật liệu/sản phẩm gây hại môi trường.',
+    productFocus: 'Sản phẩm cần chứng minh thân thiện môi trường bằng vật liệu, vòng đời sử dụng, khả năng tái chế/phân hủy, độ bền, chi phí và tác động thực tế, không dừng ở đồ thủ công trang trí.',
+    breakthroughAngles: [
+      'Vật liệu mới từ phụ phẩm địa phương có tính năng đo được: chống ẩm, cách nhiệt, hấp phụ, chịu lực, phân hủy hoặc tái dùng nhiều vòng.',
+      'Sản phẩm thay thế nhựa dùng một lần hoặc vật liệu độc hại trong trường học/gia đình với trải nghiệm dùng tốt hơn.',
+      'Thiết kế tuần hoàn: thu gom - tái chế - sử dụng - đo tác động, biến rác thành sản phẩm có giá trị thật.'
+    ],
+    feasibleEvidence: 'Mẫu vật liệu/sản phẩm, nguồn nguyên liệu, thử nghiệm độ bền/khả năng thấm/cách nhiệt/khối lượng rác giảm, so sánh với sản phẩm cũ, chi phí, số lần tái sử dụng và hình ảnh quy trình.'
+  },
+  'Các dụng cụ sinh hoạt gia đình và đồ chơi trẻ em': {
+    officialScope: 'Dụng cụ hỗ trợ sinh hoạt, an toàn gia đình, chăm sóc trẻ em/người già/người khuyết tật, đồ chơi giáo dục, đồ chơi vận động, mô hình vui học và sản phẩm nâng chất lượng sống hằng ngày.',
+    productFocus: 'Sản phẩm phải giải quyết tình huống sinh hoạt cụ thể hoặc tạo trải nghiệm chơi - học có giá trị; trọng tâm là an toàn, tiện dụng, dễ chế tạo, dùng được thật và phù hợp trẻ em.',
+    breakthroughAngles: [
+      'Dụng cụ gia đình thông minh chi phí thấp giúp phòng tai nạn, tiết kiệm thời gian, hỗ trợ người yếu thế hoặc trẻ nhỏ.',
+      'Đồ chơi giáo dục có cơ chế học qua chơi: logic, khoa học, lịch sử, văn hóa, cảm xúc xã hội hoặc kỹ năng an toàn.',
+      'Thiết kế module tháo lắp, tự sửa, tái chế hoặc cá nhân hóa theo lứa tuổi để sản phẩm có vòng đời dài hơn.'
+    ],
+    feasibleEvidence: 'Nguyên mẫu đúng kích thước an toàn, thử tải/độ bền, thử với người dùng mục tiêu có giám sát, mô tả rủi ro và cách giảm rủi ro, chi phí, hướng dẫn sử dụng và video vận hành.'
+  },
+  'Các giải pháp kỹ thuật nhằm ứng phó với biến đổi khí hậu, bảo vệ môi trường và phát triển kinh tế': {
+    officialScope: 'Thiết bị, máy móc, robot, hệ thống tự động hóa, cảnh báo, quan trắc, xử lý, sản xuất thông minh hoặc giải pháp kỹ thuật giúp thích ứng khí hậu, bảo vệ môi trường và tạo giá trị kinh tế.',
+    productFocus: 'Khác với sản phẩm xanh đơn lẻ, lĩnh vực này cần một hệ thống/giải pháp kỹ thuật có tác động vận hành: đo, cảnh báo, xử lý, tối ưu sản xuất, giảm thiệt hại hoặc tăng năng suất cho cộng đồng.',
+    breakthroughAngles: [
+      'Hệ cảnh báo sớm thiên tai/ô nhiễm/nắng nóng/ngập mặn bằng cảm biến, dữ liệu địa phương và kênh thông báo dễ dùng.',
+      'Thiết bị nông nghiệp/thuỷ sản/tiểu thủ công nghiệp giúp tiết kiệm nước, năng lượng, nhân công hoặc giảm thất thoát sau thu hoạch.',
+      'Giải pháp kinh tế xanh cho địa phương: biến phụ phẩm thành sản phẩm, tối ưu quy trình sản xuất nhỏ, đo được lợi ích môi trường và lợi ích kinh tế.'
+    ],
+    feasibleEvidence: 'Mô hình hệ thống, sơ đồ nguyên lý, số liệu trước - sau, thử nghiệm ngoài hiện trường hoặc mô phỏng thực tế, chi phí/hiệu suất, độ ổn định, khả năng nhân rộng và video vận hành.'
+  }
+};
+
+const CREATIVE_NATIONAL_INNOVATION_PRINCIPLES = `
+NGUYÊN TẮC TÌM Ý TƯỞNG SÁNG TẠO TTNND CẤP QUỐC GIA:
+- Bám thể lệ toàn quốc lần thứ 22 năm 2026: sản phẩm thuộc 5 lĩnh vực, có tính mới, tính sáng tạo, có mô hình/sản phẩm hoặc video vận hành, vật liệu an toàn, thuyết minh rõ ý tưởng - phương pháp - vật liệu - cách dùng - khả năng áp dụng.
+- Ưu tiên sản phẩm "nhìn thấy, cầm được, chạy được": mô hình thông minh, dụng cụ đa năng, thiết bị máy móc, robot, tự động hóa, phần mềm điều khiển hoặc hệ thống số có demo thật.
+- Đột phá phải nằm ở ít nhất một khâu: nguyên lý, kết cấu, vật liệu, tính năng, công dụng, thiết kế, phương thức triển khai, nhóm người hưởng lợi hoặc khả năng nhân rộng.
+- Ý tưởng đạt giải cao thường giải quyết vấn đề rất cụ thể tại trường học, gia đình, địa phương; có người dùng thật, dữ liệu/đánh giá trước - sau, chi phí hợp lý và câu chuyện thuyết minh dễ bảo vệ.
+- Tránh ý tưởng sáo mòn nếu không có cơ chế mới: thùng rác thông minh, app nhắc học, robot tưới cây, máy lọc nước mini, đồ tái chế trang trí, mô hình cảnh báo đơn giản chỉ bật còi/đèn.
+`.trim();
+
+function getCreativeFieldGuide(field: string): CreativeFieldGuide | undefined {
+  return CREATIVE_FIELD_GUIDES[field];
+}
+
+function buildCreativeFieldCataloguePrompt() {
+  return CREATIVE_FIELD_OPTIONS.map((field, index) => {
+    const guide = getCreativeFieldGuide(field);
+    return `${index + 1}. ${field}: ${guide?.officialScope || 'Thuộc danh mục 5 lĩnh vực chính thức.'} Trọng tâm sản phẩm: ${guide?.productFocus || 'Cần có mô hình, tính mới, tính sáng tạo và khả năng áp dụng.'}`;
+  }).join('\n');
+}
+
+function buildCreativeSelectedFieldPrompt(field: string) {
+  const guide = getCreativeFieldGuide(field);
+  if (!guide) {
+    return `Lĩnh vực đang chọn: ${field}. Hãy xác định đúng dạng sản phẩm, tránh nhầm sang lĩnh vực khác, và đề xuất mô hình có thể chế tạo hoặc demo được.`;
+  }
+
+  return `
+LĨNH VỰC ĐANG CHỌN: ${field}
+- Phạm vi sản phẩm: ${guide.officialScope}
+- Trọng tâm cần hiểu: ${guide.productFocus}
+- Góc đột phá nên ưu tiên:
+${guide.breakthroughAngles.map((angle, index) => `  ${index + 1}. ${angle}`).join('\n')}
+- Minh chứng khả thi cần có: ${guide.feasibleEvidence}
+`.trim();
+}
 
 const KHKT_FIELD_OPTIONS = [
   'Khoa học động vật',
@@ -828,6 +924,14 @@ CÁCH KHAI THÁC BỐI CẢNH NÂNG CAO:
 - Nếu thông tin địa phương có văn hóa, địa hình, khí hậu, thói quen học tập hoặc nguồn lực đặc biệt, hãy dùng chúng để tạo cơ chế giải pháp mới.
   `;
 
+  const buildContestFieldInsightPrompt = () => isKhktContest
+    ? `TRỌNG TÂM LĨNH VỰC KHKT:
+${buildKhktSelectedFieldPrompt(field)}
+${KHKT_NATIONAL_RESEARCH_PRINCIPLES}`
+    : `TRỌNG TÂM LĨNH VỰC SÁNG TẠO TTNND:
+${buildCreativeSelectedFieldPrompt(field)}
+${CREATIVE_NATIONAL_INNOVATION_PRINCIPLES}`;
+
   const generateIdeas = async (isReroll = false) => {
     setIsGenerating(true);
     setResult('');
@@ -852,12 +956,12 @@ CÁCH KHAI THÁC BỐI CẢNH NÂNG CAO:
           'Đang hoàn thiện ma trận rubric và Top 3 đề tài ưu tiên...'
         ]
       : [
-          'Đang phân tích bối cảnh và các vấn đề nhức nhối trong thực tế...',
+          'Đang đối chiếu 5 lĩnh vực Sáng tạo TTNND và bối cảnh thực tế...',
           'Đang đối chiếu với kho ý tưởng đã có để tránh trùng lặp...',
-          'Đang tìm kiếm các giải pháp đột phá, đảm bảo Tính mới và Tính sáng tạo...',
-          'Đang đánh giá Tính khả thi và Tính bền vững cho học sinh...',
-          'Đang tinh chỉnh và chọn lọc ra 20 ý tưởng xuất sắc nhất...',
-          'Đang hoàn thiện báo cáo phân tích chuyên sâu...'
+          'Đang tìm điểm đột phá ở nguyên lý, kết cấu, vật liệu, tính năng hoặc cách triển khai...',
+          'Đang đánh giá mô hình, tính khả thi, khả năng áp dụng và tính bền vững...',
+          'Đang chọn lọc 20 ý tưởng có tiềm năng đạt giải toàn quốc...',
+          'Đang hoàn thiện Top 3 ý tưởng champion và hướng phát triển...'
         ];
 
     let stepIndex = 0;
@@ -972,14 +1076,22 @@ Sau bảng, viết thêm 2-3 câu "Ghi chú lựa chọn" để giải thích v�
 
       const creativePrompt = `
 Bạn là một Chuyên gia AI hàng đầu về Đổi mới Sáng tạo và là Giám khảo cấp quốc gia của "Cuộc thi Sáng tạo Thanh thiếu niên Nhi đồng" tại Việt Nam.
-Nhiệm vụ của bạn là tạo ra ĐÚNG 20 Ý TƯỞNG xuất sắc nhất. Các ý tưởng phải có tính mới, tính sáng tạo cao, tính khả thi, tính bền vững cao và đặc biệt phải có ý nghĩa lớn trong cuộc sống học tập.
+Nhiệm vụ của bạn là tạo ra ĐÚNG 20 Ý TƯỞNG/MÔ HÌNH/SẢN PHẨM xuất sắc nhất. Các ý tưởng phải có tính mới, tính sáng tạo cao, có khả năng chế tạo hoặc demo thật, an toàn, bền vững và đủ sức cạnh tranh ở vòng toàn quốc.
+
+DANH MỤC 5 LĨNH VỰC DỰ THI CHÍNH THỨC CẦN HIỂU:
+${buildCreativeFieldCataloguePrompt()}
+
+CHUYÊN SÂU LĨNH VỰC ĐANG CHỌN:
+${buildCreativeSelectedFieldPrompt(field)}
+
+${CREATIVE_NATIONAL_INNOVATION_PRINCIPLES}
 
 YÊU CẦU TỐI QUAN TRỌNG (THINKING PROCESS):
 1. Phân tích kỹ nhưng KHÔNG trình bày suy luận nội bộ dài dòng; chỉ viết phần tóm tắt định hướng cần thiết.
-2. TÌM KIẾM SỰ ĐỘT PHÁ: Tuyệt đối KHÔNG đề xuất các ý tưởng cũ rích, sáo mòn. Phải tìm và so sánh với những dự án/sản phẩm đã làm trước đây, từ đó đưa ra giải pháp sáng tạo và hữu ích hơn nhiều.
-3. TÍNH MỚI & SÁNG TẠO CAO: Ý tưởng phải thực sự độc đáo, chưa từng có ai làm hoặc áp dụng một góc nhìn/công nghệ hoàn toàn mới vào một vấn đề cũ.
-4. ĐƠN GIẢN NHƯNG THỰC TẾ: Giải pháp cần đơn giản nhưng có tính ứng dụng thực tế cao, giải quyết đúng "nỗi đau" trong học tập và đời sống.
-5. PHÙ HỢP LỨA TUỔI: Đảm bảo tính khả thi cho học sinh ${grade} với giới hạn công nghệ là ${techLimit}. Học sinh phải vận dụng được các kiến thức đã học trên lớp (Toán, Lý, Hóa, Sinh, Tin học...) để nghiên cứu và thực hiện dự án.
+2. TÌM KIẾM SỰ ĐỘT PHÁ: Tuyệt đối không đề xuất ý tưởng cũ rích, sáo mòn. Phải tự đối sánh với những mô hình/sản phẩm phổ biến, rồi nêu rõ khác biệt mới ở nguyên lý, kết cấu, vật liệu, tính năng, người dùng hoặc phương thức triển khai.
+3. TÍNH MỚI & SÁNG TẠO CAO: Ý tưởng phải độc đáo nhưng không viển vông; nếu dùng AI/IoT/robot thì phải nêu dữ liệu, cảm biến, thuật toán, luồng vận hành và chỉ số đánh giá.
+4. MÔ HÌNH THẬT & ỨNG DỤNG THẬT: Giải pháp phải có sản phẩm/mô hình/video vận hành, người dùng mục tiêu rõ, cách dùng rõ, và có thể thuyết minh trước giám khảo.
+5. PHÙ HỢP LỨA TUỔI: Đảm bảo tính khả thi cho học sinh ${grade} với giới hạn công nghệ là ${techLimit}. Học sinh phải vận dụng được kiến thức đã học hoặc kỹ năng phổ thông để làm phần cốt lõi.
 
 THÔNG TIN ĐẦU VÀO:
 - Lĩnh vực: ${field}
@@ -1006,15 +1118,15 @@ QUY TẮC CHỐNG TRÙNG LẶP BẮT BUỘC:
 ${isReroll ? 'YÊU CẦU ĐẶC BIỆT: Đây là lần [TÌM LẠI]. Hãy tạo 20 ý tưởng MỚI HOÀN TOÀN, không trùng lặp với lần trước.' : ''}
 
 TIÊU CHÍ ĐÁNH GIÁ CỐT LÕI (BẮT BUỘC ĐÁP ỨNG CHO CẢ 20 Ý TƯỞNG):
-1. Tính mới: Chưa từng có trên thị trường hoặc có cải tiến vượt bậc so với các giải pháp cũ.
-2. Tính sáng tạo: Cách tiếp cận độc đáo, thông minh, có yếu tố "WOW".
-3. Tính khả thi: Phù hợp với năng lực học sinh (${grade}), học sinh có thể vận dụng kiến thức đã học để làm mô hình thực tế, vật liệu dễ tìm, an toàn tuyệt đối. Đơn giản nhưng hiệu quả cao.
-4. Tính bền vững: Thân thiện môi trường, có khả năng nhân rộng, chi phí hợp lý.
-5. Ý nghĩa trong cuộc sống học tập: Giải quyết một vấn đề thực tế, bức xúc trong học tập hoặc đời sống học đường, mang lại giá trị thiết thực.
+1. Tính mới: Nêu rõ điểm mới so với sản phẩm/mô hình đã có, không chỉ đổi tên hoặc đổi vật liệu.
+2. Tính sáng tạo: Chỉ rõ sáng tạo nằm ở khâu nào: nguyên lý, kết cấu, vật liệu, tính năng, công dụng, thiết kế, phương thức triển khai hoặc nhóm người hưởng lợi.
+3. Tính khả thi: Học sinh ${grade} có thể làm mô hình hoặc demo trong điều kiện ${techLimit}, vật liệu/linh kiện dễ kiếm, an toàn, có video vận hành hoặc thử nghiệm.
+4. Khả năng áp dụng: Có người dùng thật, tình huống dùng rõ, hiệu quả đo được bằng thời gian, chi phí, độ chính xác, độ bền, mức tiết kiệm, mức hài lòng hoặc tác động học tập/đời sống.
+5. Tính bền vững và nhân rộng: Chi phí hợp lý, dễ bảo trì, thân thiện môi trường, có thể mở rộng sang trường/lớp/gia đình/địa phương khác.
 
 RÀNG BUỘC BẮT BUỘC VỀ KẾT QUẢ:
 - Phải hoàn thành đủ từ ### 💡 Ý TƯỞNG 1 đến ### 💡 Ý TƯỞNG 20. Tuyệt đối không dừng ở Ý TƯỞNG 8, 10 hoặc 12.
-- Nếu cần rút gọn để đủ 20 ý tưởng, hãy rút gọn từng gạch đầu dòng nhưng vẫn giữ đủ 8 mục phân tích cho mỗi ý tưởng.
+- Nếu cần rút gọn để đủ 20 ý tưởng, hãy rút gọn từng gạch đầu dòng nhưng vẫn giữ đủ 11 mục phân tích cho mỗi ý tưởng.
 - Chỉ viết TOP 3 sau khi đã trình bày xong Ý TƯỞNG 20.
 - Mỗi ý tưởng phải có điểm đánh giá theo thang 100 để người dùng lọc nhanh ý tưởng mạnh nhất.
 - KHÔNG viết phần "Cách làm chi tiết" trong kết quả chính. Ứng dụng sẽ có nút riêng để người dùng bấm khi cần AI hướng dẫn chi tiết.
@@ -1038,11 +1150,14 @@ HÃY XUẤT KẾT QUẢ THEO ĐÚNG ĐỊNH DẠNG MARKDOWN SAU:
 (Trình bày chi tiết 20 ý tưởng. Mỗi ý tưởng phải phân tích sâu sắc, thuyết phục)
 
 ### 💡 Ý TƯỞNG 1: [Tên ý tưởng thật ấn tượng, rõ nghĩa]
-- **Vấn đề & Ý nghĩa thực tiễn:** (Nỗi đau nào trong học tập/cuộc sống đang được giải quyết?)
+- **Lĩnh vực & dạng sản phẩm:** (Chọn đúng 1 trong 5 lĩnh vực; nêu đây là mô hình, dụng cụ, thiết bị, robot, phần mềm, hệ thống số hay video demo)
+- **Vấn đề & người hưởng lợi:** (Nỗi đau nào đang được giải quyết? Ai hưởng lợi: học sinh, giáo viên, gia đình, trẻ em, người yếu thế, cộng đồng hay địa phương?)
 - **So sánh với giải pháp cũ:** (Những cái đã làm là gì? Tại sao giải pháp này sáng tạo và hữu ích hơn nhiều?)
+- **Tính mới & sáng tạo ở khâu nào:** (Mới ở nguyên lý, kết cấu, vật liệu, tính năng, công dụng, thiết kế, phương thức triển khai hay nhóm người dùng?)
 - **Tính năng nổi bật duy nhất:** (Nêu đúng 1 tính năng/cải tiến then chốt làm ý tưởng này khác biệt mạnh nhất)
-- **Cơ chế hoạt động & Giải pháp:** (Mô tả rõ cách sản phẩm hoạt động, đơn giản nhưng thực tế cao)
-- **Kiến thức vận dụng:** (Học sinh cần vận dụng kiến thức môn học nào đã học để nghiên cứu dự án này?)
+- **Cơ chế hoạt động & mô hình:** (Mô tả rõ sản phẩm hoạt động thế nào, gồm những khối/chức năng nào, có thể vận hành hoặc demo ra sao)
+- **Kiến thức vận dụng & vật liệu:** (Học sinh dùng kiến thức môn học/kỹ năng nào? Vật liệu, linh kiện, phần mềm chính là gì?)
+- **Cách kiểm chứng hiệu quả:** (Đo bằng chỉ số nào, thử với ai, so sánh trước - sau hoặc so với sản phẩm cũ thế nào?)
 - **Tính khả thi & Bền vững:** (Phân tích vật liệu, độ khó kỹ thuật, tính an toàn cho học sinh ${grade}, tác động môi trường, chi phí)
 - **Điểm đánh giá:** [Tổng điểm]/100 — Tính mới [x]/20; Sáng tạo [x]/20; Khả thi [x]/20; Tác động [x]/20; Bền vững [x]/20. (1 câu giải thích điểm)
 - **🛠 Cách làm ngắn gọn:** (3-5 bước chính, dễ hiểu, để học sinh nắm ngay lộ trình thực hiện)
@@ -1258,7 +1373,7 @@ NHIỆM VỤ BẮT BUỘC:
 2. Bắt đầu chính xác bằng heading: ### 💡 Ý TƯỞNG ${nextIdeaNumber}: [Tên ý tưởng]
 3. Viết tiếp đầy đủ đến ### 💡 Ý TƯỞNG 20.
 4. Sau Ý TƯỞNG 20, viết mục ## 🏆 4. TOP 3 Ý TƯỞNG "CHAMPION" (KHUYÊN CHỌN NHẤT) bằng bảng Markdown GFM có đúng 5 cột: Hạng | Ý tưởng | Điểm | Lý do chọn | Hướng phát triển.
-5. Giữ đúng cấu trúc 8 gạch đầu dòng cho mỗi ý tưởng: Vấn đề & Ý nghĩa thực tiễn; So sánh với giải pháp cũ; Tính năng nổi bật duy nhất; Cơ chế hoạt động & Giải pháp; Kiến thức vận dụng; Tính khả thi & Bền vững; Điểm đánh giá; Cách làm ngắn gọn.
+5. Giữ đúng cấu trúc 11 gạch đầu dòng cho mỗi ý tưởng: Lĩnh vực & dạng sản phẩm; Vấn đề & người hưởng lợi; So sánh với giải pháp cũ; Tính mới & sáng tạo ở khâu nào; Tính năng nổi bật duy nhất; Cơ chế hoạt động & mô hình; Kiến thức vận dụng & vật liệu; Cách kiểm chứng hiệu quả; Tính khả thi & Bền vững; Điểm đánh giá; Cách làm ngắn gọn.
 6. Mọi ý tưởng viết tiếp phải khác hoàn toàn các ý tưởng trong bộ nhớ cũ và khác các ý tưởng đã có ở phần trước.
 7. KHÔNG viết phần "Cách làm chi tiết"; phần này chỉ sinh khi người dùng bấm nút riêng.
 
@@ -1272,6 +1387,11 @@ THÔNG TIN ĐẦU VÀO:
 - Mục tiêu: ${mucTieu}
 - Bối cảnh: ${context || 'Không có'}
 - Nguồn lực: ${resources || 'Không có'}
+
+CHUYÊN SÂU LĨNH VỰC ĐANG CHỌN:
+${buildCreativeSelectedFieldPrompt(field)}
+
+${CREATIVE_NATIONAL_INNOVATION_PRINCIPLES}
 
 ${buildAdvancedContextPrompt()}
 
@@ -1334,10 +1454,7 @@ THÔNG TIN CUỘC THI:
 - Lĩnh vực: ${field}
 ${isKhktContest ? `- Loại dự án ưu tiên: ${getKhktProjectTypeLabel(khktProjectType)}
 - Phiếu chấm cần bám: Vấn đề/Câu hỏi 10; Thiết kế & phương pháp 15; Thực hiện/kiểm chứng 20; Sáng tạo 20; Báo cáo 10; Nội dung khoa học 25.` : `- Mục tiêu: ${mucTieu}`}
-${isKhktContest ? `
-TRỌNG TÂM LĨNH VỰC KHKT:
-${buildKhktSelectedFieldPrompt(field)}
-${KHKT_NATIONAL_RESEARCH_PRINCIPLES}` : ''}
+${buildContestFieldInsightPrompt()}
 
 Ý TƯỞNG CẦN ĐÁNH GIÁ:
 ${sectionContent}
@@ -1425,10 +1542,7 @@ THÔNG TIN CUỘC THI:
 - Lĩnh vực: ${field}
 ${isKhktContest ? `- Loại dự án ưu tiên: ${getKhktProjectTypeLabel(khktProjectType)}
 - Mục tiêu nâng cấp: tăng điểm Thực hiện/kiểm chứng, Tính sáng tạo và Nội dung khoa học theo phiếu chấm KHKT.` : `- Mục tiêu: ${mucTieu}`}
-${isKhktContest ? `
-TRỌNG TÂM LĨNH VỰC KHKT:
-${buildKhktSelectedFieldPrompt(field)}
-${KHKT_NATIONAL_RESEARCH_PRINCIPLES}` : ''}
+${buildContestFieldInsightPrompt()}
 
 Ý TƯỞNG BAN ĐẦU:
 ${sectionContent}
@@ -1528,10 +1642,7 @@ ${isKhktContest ? `- Loại dự án ưu tiên: ${getKhktProjectTypeLabel(khktPr
 - Vấn đề muốn giải quyết: ${problem || 'Không có'}
 - Ý tưởng đã có/không muốn trùng: ${avoidIdeas || 'Không có'}
 - Điểm riêng địa phương/trường/lớp: ${localTraits || 'Không có'}
-${isKhktContest ? `
-TRỌNG TÂM LĨNH VỰC KHKT:
-${buildKhktSelectedFieldPrompt(field)}
-${KHKT_NATIONAL_RESEARCH_PRINCIPLES}` : ''}
+${buildContestFieldInsightPrompt()}
 
 YÊU CẦU TRÌNH BÀY:
 1. Không viết lại toàn bộ phần phân tích ý tưởng. Chỉ tập trung vào cách làm thực tế.
@@ -1544,7 +1655,7 @@ YÊU CẦU TRÌNH BÀY:
    - Tiêu chí đánh giá sản phẩm hoàn thành
    - Lỗi thường gặp và cách khắc phục
    - Cách nâng cấp nếu còn thời gian
-3. ${isKhktContest ? 'Bổ sung riêng cho KHKT: câu hỏi/giả thuyết hoặc vấn đề kỹ thuật, biến số/tiêu chí giải pháp, bảng dữ liệu cần đo, cách phân tích kết quả, giới hạn kết luận và gợi ý bố cục poster/báo cáo theo phiếu chấm 100 điểm.' : `Phù hợp với học sinh ${grade}, ưu tiên vật liệu dễ kiếm, an toàn, chi phí thấp.`}
+3. ${isKhktContest ? 'Bổ sung riêng cho KHKT: câu hỏi/giả thuyết hoặc vấn đề kỹ thuật, biến số/tiêu chí giải pháp, bảng dữ liệu cần đo, cách phân tích kết quả, giới hạn kết luận và gợi ý bố cục poster/báo cáo theo phiếu chấm 100 điểm.' : `Bổ sung riêng cho Sáng tạo TTNND: mô hình/sản phẩm hoặc video vận hành, vật liệu an toàn, cách thuyết minh tính mới - tính sáng tạo - khả năng áp dụng, và cách kiểm chứng hiệu quả phù hợp học sinh ${grade}.`}
 4. Trình bày bằng Markdown, ngắn gọn nhưng đủ chi tiết để học sinh có thể bắt tay làm ngay.`;
 
     try {
@@ -1635,10 +1746,7 @@ THÔNG TIN CUỘC THI:
 - Lĩnh vực: ${field}
 ${isKhktContest ? `- Loại dự án ưu tiên: ${getKhktProjectTypeLabel(khktProjectType)}
 - Rubric KHKT: Vấn đề/Câu hỏi 10; Thiết kế & phương pháp 15; Thực hiện/kiểm chứng 20; Sáng tạo 20; Báo cáo 10; Nội dung khoa học 25.` : `- Mục tiêu: ${mucTieu}`}
-${isKhktContest ? `
-TRỌNG TÂM LĨNH VỰC KHKT:
-${buildKhktSelectedFieldPrompt(field)}
-${KHKT_NATIONAL_RESEARCH_PRINCIPLES}` : ''}
+${buildContestFieldInsightPrompt()}
 
 Ý TƯỞNG CẦN SO SÁNH:
 ${ideaContent}
@@ -1864,10 +1972,13 @@ Trình bày bằng Markdown, rõ ràng, ngắn gọn và có tính thực tế.`
               ['Thực hiện và kiểm chứng'],
             ]
           : [
-              ['Vấn đề & Ý nghĩa thực tiễn'],
+              ['Lĩnh vực & dạng sản phẩm'],
+              ['Vấn đề & người hưởng lợi', 'Vấn đề & Ý nghĩa thực tiễn'],
+              ['Tính mới & sáng tạo ở khâu nào'],
               ['Tính năng nổi bật duy nhất'],
-              ['Cơ chế hoạt động & Giải pháp'],
-              ['Kiến thức vận dụng'],
+              ['Cơ chế hoạt động & mô hình', 'Cơ chế hoạt động & Giải pháp'],
+              ['Cách kiểm chứng hiệu quả'],
+              ['Kiến thức vận dụng & vật liệu', 'Kiến thức vận dụng'],
               ['Tính khả thi & Bền vững'],
             ];
         const summary = summaryLabels
@@ -2719,14 +2830,19 @@ Trình bày bằng Markdown, rõ ràng, ngắn gọn và có tính thực tế.`
                   <option key={opt} value={opt} className="bg-teal-900 text-teal-50">{opt}</option>
                 ))}
               </select>
-              {isKhktContest && (() => {
-                const selectedFieldGuide = getKhktFieldGuide(field);
+              {(() => {
+                const selectedFieldGuide = isKhktContest ? getKhktFieldGuide(field) : getCreativeFieldGuide(field);
                 if (!selectedFieldGuide) return null;
+                const focusText = 'researchFocus' in selectedFieldGuide
+                  ? selectedFieldGuide.researchFocus
+                  : selectedFieldGuide.productFocus;
 
                 return (
                   <div className="rounded-xl border border-emerald-400/20 bg-emerald-950/25 px-3 py-2.5 text-xs text-teal-100">
-                    <div className="font-extrabold uppercase tracking-wide text-emerald-300">Trọng tâm nghiên cứu</div>
-                    <p className="mt-1 leading-relaxed">{selectedFieldGuide.researchFocus}</p>
+                    <div className="font-extrabold uppercase tracking-wide text-emerald-300">
+                      {isKhktContest ? 'Trọng tâm nghiên cứu' : 'Trọng tâm sáng tạo'}
+                    </div>
+                    <p className="mt-1 leading-relaxed">{focusText}</p>
                     <p className="mt-1.5 leading-relaxed text-teal-200">
                       <span className="font-bold text-emerald-200">Góc đột phá:</span> {selectedFieldGuide.breakthroughAngles[0]}
                     </p>
