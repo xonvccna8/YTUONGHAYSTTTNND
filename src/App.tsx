@@ -144,7 +144,42 @@ async function readApiJson(response: Response) {
   }
 }
 
-const FIELD_OPTIONS = [
+type ContestType = 'creative' | 'khkt';
+type KhktProjectType = 'auto' | 'science' | 'engineering';
+
+const CONTEST_OPTIONS: {
+  id: ContestType;
+  label: string;
+  shortLabel: string;
+  title: string;
+  resultTab: string;
+  actionLabel: string;
+  docTitle: string;
+  emptyTitle: string;
+}[] = [
+  {
+    id: 'creative',
+    label: 'Sáng tạo TTNND',
+    shortLabel: 'TTNND',
+    title: 'Cuộc thi Sáng tạo Thanh thiếu niên Nhi đồng',
+    resultTab: 'Kết quả Ý Tưởng',
+    actionLabel: 'Tạo Ý Tưởng',
+    docTitle: 'Báo cáo ý tưởng sáng tạo',
+    emptyTitle: 'Chưa có dữ liệu',
+  },
+  {
+    id: 'khkt',
+    label: 'KHKT Quốc gia',
+    shortLabel: 'KHKT',
+    title: 'Cuộc thi Khoa học, kỹ thuật học sinh trung học',
+    resultTab: 'Đề tài KHKT',
+    actionLabel: 'Tạo Đề Tài KHKT',
+    docTitle: 'Báo cáo đề tài KHKT',
+    emptyTitle: 'Chưa có đề tài KHKT',
+  },
+];
+
+const CREATIVE_FIELD_OPTIONS = [
   'Đồ dùng học tập',
   'Phần mềm tin học',
   'Sản phẩm thân thiện môi trường',
@@ -152,13 +187,52 @@ const FIELD_OPTIONS = [
   'Giải pháp kỹ thuật liên quan cuộc sống và bảo vệ môi trường',
 ];
 
-const CAP_HOC_OPTIONS = ['Tiểu học', 'THCS', 'THPT'];
+const KHKT_FIELD_OPTIONS = [
+  'Khoa học động vật',
+  'Khoa học xã hội và hành vi',
+  'Hóa sinh',
+  'Y sinh và khoa học sức khỏe',
+  'Kĩ thuật y sinh',
+  'Sinh học tế bào và phân tử',
+  'Hóa học',
+  'Sinh học trên máy tính và Sinh - Tin',
+  'Khoa học Trái đất và Môi trường',
+  'Hệ thống nhúng',
+  'Năng lượng: Hóa học',
+  'Năng lượng: Vật lí',
+  'Kĩ thuật cơ khí',
+  'Kĩ thuật môi trường',
+  'Khoa học vật liệu',
+  'Toán học',
+  'Vi sinh',
+  'Vật lí và Thiên văn',
+  'Khoa học thực vật',
+  'Rô-bốt và máy thông minh',
+  'Phần mềm hệ thống',
+  'Y học chuyển dịch',
+];
 
-const GRADE_OPTIONS = [
+const FIELD_OPTIONS = CREATIVE_FIELD_OPTIONS;
+
+const CREATIVE_CAP_HOC_OPTIONS = ['Tiểu học', 'THCS', 'THPT'];
+const KHKT_CAP_HOC_OPTIONS = ['THCS', 'THPT'];
+const CAP_HOC_OPTIONS = CREATIVE_CAP_HOC_OPTIONS;
+
+const CREATIVE_GRADE_OPTIONS = [
   'Tiểu học: Lớp 1–5',
   'THCS: Lớp 6–9',
   'THPT: Lớp 10–12',
 ];
+
+const KHKT_GRADE_OPTIONS = [
+  'THCS: Lớp 8',
+  'THCS: Lớp 9',
+  'THPT: Lớp 10',
+  'THPT: Lớp 11',
+  'THPT: Lớp 12',
+];
+
+const GRADE_OPTIONS = CREATIVE_GRADE_OPTIONS;
 
 const TECH_LIMIT_OPTIONS = ['Cơ bản', 'Trung bình', 'Nâng cao'];
 
@@ -170,10 +244,51 @@ const MUC_TIEU_OPTIONS = [
   'Cấp quốc gia',
 ];
 
+const KHKT_PROJECT_TYPE_OPTIONS: { value: KhktProjectType; label: string }[] = [
+  { value: 'auto', label: 'AI tự đề xuất loại phù hợp' },
+  { value: 'science', label: 'Dự án khoa học' },
+  { value: 'engineering', label: 'Dự án kỹ thuật' },
+];
+
+const KHKT_RUBRIC_ITEMS = [
+  ['Câu hỏi/Vấn đề', '10'],
+  ['Thiết kế & phương pháp', '15'],
+  ['Thực hiện/kiểm chứng', '20'],
+  ['Tính sáng tạo', '20'],
+  ['Báo cáo', '10'],
+  ['Nội dung khoa học', '25'],
+];
+
+function getContestMeta(type: ContestType) {
+  return CONTEST_OPTIONS.find(option => option.id === type) || CONTEST_OPTIONS[0];
+}
+
+function getFieldOptions(type: ContestType) {
+  return type === 'khkt' ? KHKT_FIELD_OPTIONS : CREATIVE_FIELD_OPTIONS;
+}
+
+function getCapHocOptions(type: ContestType) {
+  return type === 'khkt' ? KHKT_CAP_HOC_OPTIONS : CREATIVE_CAP_HOC_OPTIONS;
+}
+
+function getGradeOptions(type: ContestType) {
+  return type === 'khkt' ? KHKT_GRADE_OPTIONS : CREATIVE_GRADE_OPTIONS;
+}
+
+function inferContestTypeFromField(value?: string): ContestType {
+  return value && KHKT_FIELD_OPTIONS.includes(value) ? 'khkt' : 'creative';
+}
+
+function getKhktProjectTypeLabel(value: KhktProjectType) {
+  return KHKT_PROJECT_TYPE_OPTIONS.find(option => option.value === value)?.label || KHKT_PROJECT_TYPE_OPTIONS[0].label;
+}
+
 interface SavedSession {
   id: string;
   timestamp: number;
   inputs: {
+    contestType?: ContestType;
+    khktProjectType?: KhktProjectType;
     field: string;
     capHoc: string;
     grade: string;
@@ -196,6 +311,8 @@ interface SavedIdea {
   title: string;
   content: string;
   inputs: {
+    contestType?: ContestType;
+    khktProjectType?: KhktProjectType;
     field: string;
     capHoc: string;
     grade: string;
@@ -287,6 +404,8 @@ export default function App() {
     }
   };
 
+  const [contestType, setContestType] = useState<ContestType>('creative');
+  const [khktProjectType, setKhktProjectType] = useState<KhktProjectType>('auto');
   const [field, setField] = useState(FIELD_OPTIONS[0]);
   const [capHoc, setCapHoc] = useState(CAP_HOC_OPTIONS[0]);
   const [grade, setGrade] = useState(GRADE_OPTIONS[0]);
@@ -333,6 +452,21 @@ export default function App() {
   const [showAdvancedModal, setShowAdvancedModal] = useState(false);
 
   const resultEndRef = useRef<HTMLDivElement>(null);
+  const contestMeta = getContestMeta(contestType);
+  const activeFieldOptions = getFieldOptions(contestType);
+  const activeCapHocOptions = getCapHocOptions(contestType);
+  const activeGradeOptions = getGradeOptions(contestType);
+  const isKhktContest = contestType === 'khkt';
+
+  useEffect(() => {
+    const nextFields = getFieldOptions(contestType);
+    const nextCaps = getCapHocOptions(contestType);
+    const nextGrades = getGradeOptions(contestType);
+
+    setField(current => nextFields.includes(current) ? current : nextFields[0]);
+    setCapHoc(current => nextCaps.includes(current) ? current : nextCaps[0]);
+    setGrade(current => nextGrades.includes(current) ? current : nextGrades[0]);
+  }, [contestType]);
 
   useEffect(() => {
     localStorage.setItem('ideagpt_history', JSON.stringify(history));
@@ -442,14 +576,23 @@ CÁCH KHAI THÁC BỐI CẢNH NÂNG CAO:
     }
 
     // Simulated deep thinking phases
-    const loadingSteps = [
-      'Đang phân tích bối cảnh và các vấn đề nhức nhối trong thực tế...',
-      'Đang đối chiếu với kho ý tưởng đã có để tránh trùng lặp...',
-      'Đang tìm kiếm các giải pháp đột phá, đảm bảo Tính mới và Tính sáng tạo...',
-      'Đang đánh giá Tính khả thi và Tính bền vững cho học sinh...',
-      'Đang tinh chỉnh và chọn lọc ra 20 ý tưởng xuất sắc nhất...',
-      'Đang hoàn thiện báo cáo phân tích chuyên sâu...'
-    ];
+    const loadingSteps = isKhktContest
+      ? [
+          'Đang đối chiếu 22 lĩnh vực KHKT và năng lực học sinh...',
+          'Đang bám phiếu chấm 100 điểm để lọc đề tài có khả năng đạt giải...',
+          'Đang xác định loại dự án khoa học/kỹ thuật phù hợp...',
+          'Đang thiết kế phương pháp, dữ liệu, nguyên mẫu và cách kiểm chứng...',
+          'Đang chọn lọc 20 đề tài KHKT mạnh nhất...',
+          'Đang hoàn thiện ma trận rubric và Top 3 đề tài ưu tiên...'
+        ]
+      : [
+          'Đang phân tích bối cảnh và các vấn đề nhức nhối trong thực tế...',
+          'Đang đối chiếu với kho ý tưởng đã có để tránh trùng lặp...',
+          'Đang tìm kiếm các giải pháp đột phá, đảm bảo Tính mới và Tính sáng tạo...',
+          'Đang đánh giá Tính khả thi và Tính bền vững cho học sinh...',
+          'Đang tinh chỉnh và chọn lọc ra 20 ý tưởng xuất sắc nhất...',
+          'Đang hoàn thiện báo cáo phân tích chuyên sâu...'
+        ];
 
     let stepIndex = 0;
     const loadingInterval = setInterval(() => {
@@ -465,7 +608,95 @@ CÁCH KHAI THÁC BỐI CẢNH NÂNG CAO:
     try {
       const ideaExclusionList = buildIdeaExclusionPrompt();
       const noveltySeed = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-      const prompt = `
+      const khktPrompt = `
+Bạn là chuyên gia AI, giáo viên hướng dẫn nghiên cứu khoa học và giám khảo của "Cuộc thi nghiên cứu khoa học, kỹ thuật cấp quốc gia dành cho học sinh trung học" tại Việt Nam.
+Nhiệm vụ của bạn là tạo ra ĐÚNG 20 ĐỀ TÀI KHKT xuất sắc cho học sinh, bám sát danh mục 22 lĩnh vực chính thức và phiếu chấm 100 điểm.
+
+DANH MỤC 22 LĨNH VỰC KHKT:
+${KHKT_FIELD_OPTIONS.map((item, index) => `${index + 1}. ${item}`).join('\n')}
+
+PHIẾU CHẤM KHKT 100 ĐIỂM CẦN BÁM SÁT:
+- Câu hỏi nghiên cứu hoặc vấn đề nghiên cứu: 10 điểm.
+- Thiết kế và phương pháp: 15 điểm.
+- Thực hiện: thu thập, phân tích dữ liệu hoặc chế tạo, kiểm tra nguyên mẫu: 20 điểm.
+- Tính sáng tạo: 20 điểm.
+- Báo cáo/poster/tài liệu: 10 điểm.
+- Nội dung khoa học: 25 điểm.
+
+PHÂN BIỆT LOẠI DỰ ÁN:
+- Dự án khoa học: cần câu hỏi nghiên cứu rõ, giả thuyết/biến số, phương pháp thu thập dữ liệu, phân tích dữ liệu và kết luận có thể lặp lại.
+- Dự án kỹ thuật: cần vấn đề thực tế, tiêu chí giải pháp, thiết kế nguyên mẫu/mô hình, chế tạo, kiểm thử nhiều điều kiện và chứng minh mức độ hoàn chỉnh công nghệ.
+
+THÔNG TIN ĐẦU VÀO:
+- Cuộc thi: ${contestMeta.title}
+- Lĩnh vực KHKT: ${field}
+- Loại dự án ưu tiên: ${getKhktProjectTypeLabel(khktProjectType)}
+- Cấp học: ${capHoc} (Lớp: ${grade})
+- Giới hạn công nghệ: ${techLimit}
+- Mục tiêu: ${mucTieu}
+- Bối cảnh: ${context || 'Không có'}
+- Nguồn lực: ${resources || 'Không có'}
+
+${buildAdvancedContextPrompt()}
+
+MÃ PHIÊN SÁNG TẠO: ${noveltySeed}
+Hãy dùng mã phiên này để mở một nhánh đề tài mới. Nếu người dùng bấm tạo nhiều lần với cùng thông tin đầu vào, kết quả lần sau vẫn phải khác rõ rệt.
+
+KHO Ý TƯỞNG/ĐỀ TÀI ĐÃ CÓ TRÊN MÁY NGƯỜI DÙNG (DANH SÁCH CẦN TRÁNH):
+${ideaExclusionList}
+
+QUY TẮC BẮT BUỘC:
+1. Chỉ đề xuất đề tài phù hợp học sinh lớp ${grade}, an toàn, đúng đạo đức nghiên cứu, không dùng mầm bệnh, hóa chất độc hại hoặc nội dung có nguy cơ gây hại.
+2. Đề tài phải đủ chất "nghiên cứu" hoặc "kỹ thuật": có dữ liệu/đo đạc/thử nghiệm/nguyên mẫu, không chỉ là ý tưởng tuyên truyền hoặc sản phẩm trang trí.
+3. Với mỗi đề tài, phải ghi rõ nên đăng ký DỰ ÁN KHOA HỌC hay DỰ ÁN KỸ THUẬT. Nếu người dùng chọn một loại cụ thể thì ưu tiên đúng loại đó.
+4. Mỗi đề tài phải có cách kiểm chứng rõ ràng để ăn điểm mục Thực hiện và Nội dung khoa học.
+5. Không trùng tên, vấn đề chính, cơ chế hoạt động hoặc phương pháp nghiên cứu với danh sách đã có. Trong 20 đề tài cũng không được trùng nhau.
+6. Không viết "cách làm chi tiết" quá dài trong kết quả chính; chỉ nêu lộ trình ngắn gọn vì ứng dụng có nút hướng dẫn riêng.
+
+${isReroll ? 'YÊU CẦU ĐẶC BIỆT: Đây là lần [TÌM LẠI]. Hãy tạo 20 đề tài KHKT MỚI HOÀN TOÀN, không trùng lặp với lần trước.' : ''}
+
+HÃY XUẤT KẾT QUẢ THEO ĐÚNG ĐỊNH DẠNG MARKDOWN SAU:
+
+## 🧪 1. CHIẾN LƯỢC CHỌN ĐỀ TÀI KHKT
+(Tóm tắt hướng chọn đề tài theo lĩnh vực ${field}, loại dự án phù hợp, tiêu chí giám khảo sẽ soi kỹ và cách tối đa hóa điểm theo phiếu chấm.)
+
+## 🎯 2. MA TRẬN RUBRIC 100 ĐIỂM
+(Trình bày ngắn gọn các điểm cần chuẩn bị để đạt điểm cao: vấn đề/câu hỏi 10, phương pháp 15, thực hiện 20, sáng tạo 20, báo cáo 10, nội dung khoa học 25.)
+
+## 🚀 3. DANH SÁCH 20 ĐỀ TÀI KHKT TIỀM NĂNG
+
+### 💡 Ý TƯỞNG 1: [Tên đề tài KHKT ngắn, rõ vấn đề, có tính nghiên cứu]
+- **Loại dự án & lĩnh vực:** (Dự án khoa học hoặc Dự án kỹ thuật; lĩnh vực đăng ký trong 22 lĩnh vực)
+- **Câu hỏi/Vấn đề nghiên cứu:** (Nêu đúng vấn đề cần giải quyết hoặc câu hỏi có thể kiểm chứng)
+- **Mục tiêu & tiêu chí thành công:** (Nêu 2-3 tiêu chí đo được)
+- **Giải pháp/Giả thuyết cốt lõi:** (Ý tưởng khoa học hoặc kỹ thuật then chốt)
+- **Thiết kế và phương pháp:** (Cách thu thập dữ liệu, biến số, mẫu thử, hoặc cách thiết kế nguyên mẫu)
+- **Thực hiện và kiểm chứng:** (Cách đo đạc, thử nghiệm nhiều điều kiện, phân tích dữ liệu hoặc kiểm tra nguyên mẫu)
+- **Sản phẩm/dữ liệu cần có:** (Mô hình, bộ dữ liệu, biểu đồ, bảng đo, poster, nhật ký nghiên cứu)
+- **Điểm rubric KHKT:** [Tổng điểm]/100 — Câu hỏi/Vấn đề [x]/10; Thiết kế & phương pháp [x]/15; Thực hiện/kiểm chứng [x]/20; Sáng tạo [x]/20; Báo cáo [x]/10; Nội dung khoa học [x]/25. (1 câu giải thích điểm)
+- **Rủi ro, hạn chế & cách khắc phục:** (Dự đoán lỗi, giới hạn kết quả, cách xử lý)
+- **Lộ trình ngắn gọn:** (3-5 bước để học sinh bắt đầu)
+
+### 💡 Ý TƯỞNG 2: [Tên đề tài KHKT ngắn, rõ vấn đề, có tính nghiên cứu]
+... (Tương tự như trên)
+
+... (Tiếp tục trình bày đầy đủ đến Ý TƯỞNG 20)
+
+### 💡 Ý TƯỞNG 20: [Tên đề tài KHKT ngắn, rõ vấn đề, có tính nghiên cứu]
+... (Tương tự như trên)
+
+## 🏆 4. TOP 3 ĐỀ TÀI KHKT NÊN ƯU TIÊN
+Chọn ra 3 đề tài mạnh nhất trong 20 đề tài trên và trình bày BẮT BUỘC bằng bảng Markdown GFM có đúng các cột sau:
+| Hạng | Đề tài | Loại dự án | Điểm rubric | Vì sao mạnh | Việc cần làm ngay |
+|---|---|---|---:|---|---|
+| 🥇 Champion 1 | Ý tưởng số + tên đề tài | Khoa học/Kỹ thuật | xx/100 | Lý do bám rubric, sáng tạo, khả thi | Việc nên làm tiếp theo |
+| 🥈 Champion 2 | Ý tưởng số + tên đề tài | Khoa học/Kỹ thuật | xx/100 | Lý do bám rubric, sáng tạo, khả thi | Việc nên làm tiếp theo |
+| 🥉 Champion 3 | Ý tưởng số + tên đề tài | Khoa học/Kỹ thuật | xx/100 | Lý do bám rubric, sáng tạo, khả thi | Việc nên làm tiếp theo |
+
+Sau bảng, viết thêm 2-3 câu "Ghi chú lựa chọn" để giải thích vì sao 3 đề tài này có khả năng phát triển thành hồ sơ dự thi tốt.
+      `;
+
+      const creativePrompt = `
 Bạn là một Chuyên gia AI hàng đầu về Đổi mới Sáng tạo và là Giám khảo cấp quốc gia của "Cuộc thi Sáng tạo Thanh thiếu niên Nhi đồng" tại Việt Nam.
 Nhiệm vụ của bạn là tạo ra ĐÚNG 20 Ý TƯỞNG xuất sắc nhất. Các ý tưởng phải có tính mới, tính sáng tạo cao, tính khả thi, tính bền vững cao và đặc biệt phải có ý nghĩa lớn trong cuộc sống học tập.
 
@@ -560,6 +791,7 @@ Chọn ra 3 ý tưởng xuất sắc toàn diện nhất trong 20 ý tưởng tr
 
 Sau bảng, viết thêm 2-3 câu "Ghi chú lựa chọn" để giải thích vì sao 3 ý tưởng này đáng ưu tiên.
       `;
+      const prompt = isKhktContest ? khktPrompt : creativePrompt;
 
       let fullText = '';
       const fetchGPT = async (promptText = prompt) => {
@@ -708,7 +940,38 @@ Sau bảng, viết thêm 2-3 câu "Ghi chú lựa chọn" để giải thích v�
 
         const nextIdeaNumber = lastIdeaNumber + 1;
         setLoadingMessage(`Đang viết tiếp từ Ý tưởng ${nextIdeaNumber} đến Ý tưởng 20...`);
-        const continuationPrompt = `
+        const khktContinuationPrompt = `
+Bạn đang viết tiếp một báo cáo đề tài KHKT. Kết quả trước mới hoàn thành đến Ý TƯỞNG ${lastIdeaNumber}.
+
+NHIỆM VỤ BẮT BUỘC:
+1. KHÔNG viết lại các đề tài đã có.
+2. Bắt đầu chính xác bằng heading: ### 💡 Ý TƯỞNG ${nextIdeaNumber}: [Tên đề tài KHKT]
+3. Viết tiếp đầy đủ đến ### 💡 Ý TƯỞNG 20.
+4. Sau Ý TƯỞNG 20, viết mục ## 🏆 4. TOP 3 ĐỀ TÀI KHKT NÊN ƯU TIÊN bằng bảng Markdown GFM có đúng 6 cột: Hạng | Đề tài | Loại dự án | Điểm rubric | Vì sao mạnh | Việc cần làm ngay.
+5. Giữ đúng cấu trúc 10 gạch đầu dòng cho mỗi đề tài: Loại dự án & lĩnh vực; Câu hỏi/Vấn đề nghiên cứu; Mục tiêu & tiêu chí thành công; Giải pháp/Giả thuyết cốt lõi; Thiết kế và phương pháp; Thực hiện và kiểm chứng; Sản phẩm/dữ liệu cần có; Điểm rubric KHKT; Rủi ro, hạn chế & cách khắc phục; Lộ trình ngắn gọn.
+6. Mọi đề tài viết tiếp phải khác hoàn toàn các đề tài trong bộ nhớ cũ và khác các đề tài đã có ở phần trước.
+7. Không viết phần hướng dẫn chi tiết quá dài; chỉ nêu lộ trình ngắn gọn.
+
+KHO Ý TƯỞNG/ĐỀ TÀI ĐÃ CÓ TRÊN MÁY NGƯỜI DÙNG (DANH SÁCH CẦN TRÁNH):
+${ideaExclusionList}
+
+THÔNG TIN ĐẦU VÀO:
+- Cuộc thi: ${contestMeta.title}
+- Lĩnh vực KHKT: ${field}
+- Loại dự án ưu tiên: ${getKhktProjectTypeLabel(khktProjectType)}
+- Cấp học: ${capHoc} (Lớp: ${grade})
+- Giới hạn công nghệ: ${techLimit}
+- Mục tiêu: ${mucTieu}
+- Bối cảnh: ${context || 'Không có'}
+- Nguồn lực: ${resources || 'Không có'}
+
+${buildAdvancedContextPrompt()}
+
+PHẦN CUỐI KẾT QUẢ TRƯỚC ĐỂ TRÁNH TRÙNG LẶP:
+${fullText.slice(-6000)}
+        `;
+
+        const creativeContinuationPrompt = `
 Bạn đang viết tiếp một báo cáo ý tưởng sáng tạo. Kết quả trước mới hoàn thành đến Ý TƯỞNG ${lastIdeaNumber}.
 
 NHIỆM VỤ BẮT BUỘC:
@@ -736,6 +999,7 @@ ${buildAdvancedContextPrompt()}
 PHẦN CUỐI KẾT QUẢ TRƯỚC ĐỂ TRÁNH TRÙNG LẶP:
 ${fullText.slice(-6000)}
         `;
+        const continuationPrompt = isKhktContest ? khktContinuationPrompt : creativeContinuationPrompt;
 
         fullText += '\n\n';
         setResult(fullText);
@@ -749,7 +1013,7 @@ ${fullText.slice(-6000)}
       }
 
       if (getLastIdeaNumber(fullText) < 20) {
-        fullText += `\n\n> ⚠️ Kết quả hiện chưa đủ 20 ý tưởng do mô hình dừng sớm. Hãy bấm "Tìm Lại" hoặc chọn chế độ nâng cao khác để tạo lại danh sách đầy đủ.`;
+        fullText += `\n\n> ⚠️ Kết quả hiện chưa đủ 20 ${isKhktContest ? 'đề tài KHKT' : 'ý tưởng'} do mô hình dừng sớm. Hãy bấm "Tìm Lại" hoặc chọn chế độ nâng cao khác để tạo lại danh sách đầy đủ.`;
         setResult(fullText);
       }
 
@@ -760,7 +1024,7 @@ ${fullText.slice(-6000)}
       setHistory(prev => [{
         id: newId,
         timestamp: Date.now(),
-        inputs: { field, capHoc, grade, techLimit, mucTieu, context, resources, problem, avoidIdeas, localTraits },
+        inputs: { contestType, khktProjectType, field, capHoc, grade, techLimit, mucTieu, context, resources, problem, avoidIdeas, localTraits },
         result: fullText,
         mode: generationMode
       }, ...prev]);
@@ -774,7 +1038,7 @@ ${fullText.slice(-6000)}
       }
     } finally {
       clearInterval(loadingInterval);
-      setLoadingMessage('Đang khởi tạo IdeaGPT...');
+      setLoadingMessage(isKhktContest ? 'Đang khởi tạo KHKT IdeaGPT...' : 'Đang khởi tạo IdeaGPT...');
       setIsGenerating(false);
     }
   };
@@ -783,8 +1047,14 @@ ${fullText.slice(-6000)}
     setLoadingInline(prev => ({ ...prev, [title]: 'comparing' }));
     setInlineComparisons(prev => ({ ...prev, [title]: '' }));
 
-    const prompt = `Bạn là chuyên gia đánh giá dự án khoa học kỹ thuật và khởi nghiệp. Hãy phân tích và so sánh ý tưởng sau đây với các sản phẩm/giải pháp ĐÃ CÓ TRÊN THỊ TRƯỜNG hoặc TRÊN MẠNG.
+    const prompt = `Bạn là chuyên gia đánh giá ${isKhktContest ? 'dự án nghiên cứu khoa học, kỹ thuật học sinh trung học' : 'dự án khoa học kỹ thuật và khởi nghiệp'}. Hãy phân tích và so sánh ý tưởng sau đây với các sản phẩm/giải pháp ĐÃ CÓ TRÊN THỊ TRƯỜNG hoặc TRÊN MẠNG.
 Hãy phân tích bằng DeepSeek V4 Pro. Nếu không có dữ liệu chắc chắn, hãy nói rõ mức độ tin cậy thay vì bịa nguồn.
+
+THÔNG TIN CUỘC THI:
+- Cuộc thi: ${contestMeta.title}
+- Lĩnh vực: ${field}
+${isKhktContest ? `- Loại dự án ưu tiên: ${getKhktProjectTypeLabel(khktProjectType)}
+- Phiếu chấm cần bám: Vấn đề/Câu hỏi 10; Thiết kế & phương pháp 15; Thực hiện/kiểm chứng 20; Sáng tạo 20; Báo cáo 10; Nội dung khoa học 25.` : `- Mục tiêu: ${mucTieu}`}
 
 Ý TƯỞNG CẦN ĐÁNH GIÁ:
 ${sectionContent}
@@ -793,7 +1063,7 @@ YÊU CẦU PHÂN TÍCH (Đóng vai trò chuyên gia DeepSeek V4 Pro để phân 
 1. ĐỐI CHIẾU THỰC TẾ: Chỉ ra đích danh 2-3 sản phẩm/dự án tương tự đã có trên thực tế nếu bạn biết chắc. Kèm link tham khảo khi chắc chắn, không bịa nguồn.
 2. SO SÁNH ĐIỂM GIỐNG & KHÁC: Phân tích điểm giống và khác biệt cốt lõi giữa ý tưởng này và các sản phẩm đã có.
 3. ĐÁNH GIÁ TÍNH MỚI: Đánh giá khách quan xem ý tưởng này có thực sự "chưa ai làm" không? Điểm nào là cải tiến ĐÁNG GIÁ NHẤT và SÁNG TẠO NHẤT so với cái cũ?
-4. TÍNH ỨNG DỤNG: Đánh giá tính ứng dụng thực tế đối với học sinh lớp ${grade}.
+4. ${isKhktContest ? 'CHẤM THEO RUBRIC KHKT: Ước lượng điểm 100, chỉ rõ điểm yếu cần bổ sung ở dữ liệu, nguyên mẫu, phương pháp, poster hoặc nội dung khoa học.' : `TÍNH ỨNG DỤNG: Đánh giá tính ứng dụng thực tế đối với học sinh lớp ${grade}.`}
 
 Trình bày bằng Markdown, ngắn gọn, súc tích, chuyên nghiệp và khách quan.`;
 
@@ -867,6 +1137,12 @@ Trình bày bằng Markdown, ngắn gọn, súc tích, chuyên nghiệp và khá
     const prompt = `Bạn là một Kỹ sư Đổi mới Sáng tạo (Innovation Engineer) xuất chúng. Dựa trên ý tưởng ban đầu và bản so sánh với các sản phẩm đã có, hãy ĐỀ XUẤT THÊM CÁC TÍNH NĂNG/CẢI TIẾN ĐỘT PHÁ HƠN NỮA để ý tưởng này trở nên hoàn toàn khác biệt, cực kỳ sáng tạo, CHƯA AI LÀM và CÓ TÍNH ỨNG DỤNG CAO VÀO THỰC TẾ.
 Hãy phân tích bằng DeepSeek V4 Pro, ưu tiên các hướng cải tiến mới, khả thi và có thể kiểm chứng.
 
+THÔNG TIN CUỘC THI:
+- Cuộc thi: ${contestMeta.title}
+- Lĩnh vực: ${field}
+${isKhktContest ? `- Loại dự án ưu tiên: ${getKhktProjectTypeLabel(khktProjectType)}
+- Mục tiêu nâng cấp: tăng điểm Thực hiện/kiểm chứng, Tính sáng tạo và Nội dung khoa học theo phiếu chấm KHKT.` : `- Mục tiêu: ${mucTieu}`}
+
 Ý TƯỞNG BAN ĐẦU:
 ${sectionContent}
 
@@ -878,7 +1154,7 @@ YÊU CẦU NÂNG CẤP (Đóng vai trò GPT-4o/GPT-5 để sáng tạo):
 2. TÍNH ỨNG DỤNG THỰC TẾ CAO: Các tính năng này phải giải quyết được vấn đề thực tế một cách hiệu quả, không viển vông, có thể áp dụng ngay vào đời sống.
 3. TÍNH KHẢ THI: Đảm bảo các tính năng này ĐƠN GIẢN, phù hợp với trình độ học sinh lớp ${grade} (có thể làm được với công nghệ: ${techLimit}).
 4. GIẢI THÍCH SỰ KHÁC BIỆT: Giải thích rõ tại sao các cải tiến này lại làm cho dự án trở nên "vô đối" và hữu ích hơn nhiều so với các sản phẩm cũ trên mạng.
-5. VẬN DỤNG KIẾN THỨC: Gợi ý cách học sinh vận dụng kiến thức môn học để làm các tính năng mới này.
+5. ${isKhktContest ? 'BÁM RUBRIC KHKT: Với mỗi cải tiến, nêu rõ nó giúp tăng điểm mục nào trong phiếu chấm 100 điểm và cần dữ liệu/thử nghiệm nào để chứng minh.' : 'VẬN DỤNG KIẾN THỨC: Gợi ý cách học sinh vận dụng kiến thức môn học để làm các tính năng mới này.'}
 
 Trình bày bằng Markdown, văn phong hấp dẫn, truyền cảm hứng và rõ ràng.`;
 
@@ -948,12 +1224,15 @@ Trình bày bằng Markdown, văn phong hấp dẫn, truyền cảm hứng và r
     setLoadingInline(prev => ({ ...prev, [title]: 'detailing' }));
     setInlineDetailedGuides(prev => ({ ...prev, [title]: '' }));
 
-    const prompt = `Bạn là giáo viên hướng dẫn học sinh làm dự án sáng tạo khoa học kỹ thuật. Hãy viết HƯỚNG DẪN CÁCH LÀM CHI TIẾT cho đúng ý tưởng dưới đây.
+    const prompt = `Bạn là giáo viên hướng dẫn học sinh làm ${isKhktContest ? 'dự án nghiên cứu khoa học, kỹ thuật dự thi cấp quốc gia' : 'dự án sáng tạo khoa học kỹ thuật'}. Hãy viết HƯỚNG DẪN CÁCH LÀM CHI TIẾT cho đúng ý tưởng dưới đây.
 
 Ý TƯỞNG CẦN HƯỚNG DẪN:
 ${sectionContent}
 
 THÔNG TIN HỌC SINH:
+- Cuộc thi: ${contestMeta.title}
+- Lĩnh vực: ${field}
+${isKhktContest ? `- Loại dự án ưu tiên: ${getKhktProjectTypeLabel(khktProjectType)}` : ''}
 - Cấp học: ${capHoc}
 - Lớp: ${grade}
 - Giới hạn công nghệ: ${techLimit}
@@ -974,7 +1253,7 @@ YÊU CẦU TRÌNH BÀY:
    - Tiêu chí đánh giá sản phẩm hoàn thành
    - Lỗi thường gặp và cách khắc phục
    - Cách nâng cấp nếu còn thời gian
-3. Phù hợp với học sinh ${grade}, ưu tiên vật liệu dễ kiếm, an toàn, chi phí thấp.
+3. ${isKhktContest ? 'Bổ sung riêng cho KHKT: câu hỏi/giả thuyết hoặc vấn đề kỹ thuật, biến số/tiêu chí giải pháp, bảng dữ liệu cần đo, cách phân tích kết quả, giới hạn kết luận và gợi ý bố cục poster/báo cáo theo phiếu chấm 100 điểm.' : `Phù hợp với học sinh ${grade}, ưu tiên vật liệu dễ kiếm, an toàn, chi phí thấp.`}
 4. Trình bày bằng Markdown, ngắn gọn nhưng đủ chi tiết để học sinh có thể bắt tay làm ngay.`;
 
     try {
@@ -1056,9 +1335,15 @@ YÊU CẦU TRÌNH BÀY:
     setCompareResult('');
     setActiveTab('compare');
 
-    const prompt = `Bạn là chuyên gia đánh giá dự án khoa học kỹ thuật và đổi mới sáng tạo.
+    const prompt = `Bạn là chuyên gia đánh giá ${isKhktContest ? 'dự án nghiên cứu khoa học, kỹ thuật học sinh trung học' : 'dự án khoa học kỹ thuật và đổi mới sáng tạo'}.
 Hãy phân tích khách quan ý tưởng sau bằng cách so sánh với sản phẩm/dự án tương tự đã có trên thị trường hoặc trên mạng.
 Hãy dùng DeepSeek V4 Pro để đối chiếu thực tế; chỉ nêu nguồn/link khi chắc chắn, không bịa nguồn.
+
+THÔNG TIN CUỘC THI:
+- Cuộc thi: ${contestMeta.title}
+- Lĩnh vực: ${field}
+${isKhktContest ? `- Loại dự án ưu tiên: ${getKhktProjectTypeLabel(khktProjectType)}
+- Rubric KHKT: Vấn đề/Câu hỏi 10; Thiết kế & phương pháp 15; Thực hiện/kiểm chứng 20; Sáng tạo 20; Báo cáo 10; Nội dung khoa học 25.` : `- Mục tiêu: ${mucTieu}`}
 
 Ý TƯỞNG CẦN SO SÁNH:
 ${ideaContent}
@@ -1066,8 +1351,8 @@ ${ideaContent}
 YÊU CẦU:
 1. Nêu 2-3 sản phẩm/dự án tương tự đã có, kèm link tham khảo nếu tìm thấy.
 2. So sánh điểm giống và khác biệt cốt lõi.
-3. Đánh giá tính mới, tính sáng tạo và khả năng đạt giải.
-4. Gợi ý cách cải tiến để ý tưởng khác biệt hơn nhưng vẫn phù hợp với học sinh ${grade}.
+3. ${isKhktContest ? 'Ước lượng điểm theo phiếu chấm KHKT 100 điểm, nêu rõ mục nào còn yếu.' : 'Đánh giá tính mới, tính sáng tạo và khả năng đạt giải.'}
+4. Gợi ý cách cải tiến để ý tưởng khác biệt hơn nhưng vẫn phù hợp với học sinh ${grade}${isKhktContest ? ' và có dữ liệu/thử nghiệm đủ bảo vệ trước giám khảo' : ''}.
 
 Trình bày bằng Markdown, rõ ràng, ngắn gọn và có tính thực tế.`;
 
@@ -1156,7 +1441,7 @@ Trình bày bằng Markdown, rõ ràng, ngắn gọn và có tính thực tế.`
         .replace(/[^a-zA-Z0-9]+/g, '-')
         .replace(/^-+|-+$/g, '')
         .toLowerCase();
-      return cleaned || 'ideagpt-y-tuong-sang-tao';
+      return cleaned || (isKhktContest ? 'ideagpt-de-tai-khkt' : 'ideagpt-y-tuong-sang-tao');
     };
 
     const parseMarkdownLine = (
@@ -1226,7 +1511,9 @@ Trình bày bằng Markdown, rõ ràng, ngắn gọn và có tính thực tế.`
     const border = { style: BorderStyle.SINGLE, size: 4, color: colors.line };
     const cellMargins = { top: 130, bottom: 130, left: 180, right: 180 };
     const inputRows = [
+      ['Cuộc thi', contestMeta.title],
       ['Lĩnh vực', field],
+      ...(isKhktContest ? [['Loại dự án ưu tiên', getKhktProjectTypeLabel(khktProjectType)]] : []),
       ['Cấp học', capHoc],
       ['Lớp', grade],
       ['Giới hạn công nghệ', techLimit],
@@ -1425,7 +1712,7 @@ Trình bày bằng Markdown, rõ ràng, ngắn gọn và có tính thực tế.`
               children: [
                 new Paragraph({
                   alignment: AlignmentType.RIGHT,
-                  children: [new TextRun({ text: 'IdeaGPT - Báo cáo ý tưởng sáng tạo', color: colors.primary, font: 'Arial', size: 18, bold: true })],
+                  children: [new TextRun({ text: `IdeaGPT - ${contestMeta.docTitle}`, color: colors.primary, font: 'Arial', size: 18, bold: true })],
                 }),
               ],
             }),
@@ -1452,7 +1739,7 @@ Trình bày bằng Markdown, rõ ràng, ngắn gọn và có tính thực tế.`
             new Paragraph({
               alignment: AlignmentType.CENTER,
               spacing: { after: 260 },
-              children: [new TextRun({ text: 'BÁO CÁO Ý TƯỞNG SÁNG TẠO', bold: true, color: colors.primaryDark, font: 'Arial', size: 36 })],
+              children: [new TextRun({ text: contestMeta.docTitle.toUpperCase(), bold: true, color: colors.primaryDark, font: 'Arial', size: 36 })],
             }),
             new Paragraph({
               alignment: AlignmentType.CENTER,
@@ -1490,6 +1777,9 @@ Trình bày bằng Markdown, rõ ràng, ngắn gọn và có tính thực tế.`
   };
 
   const loadSession = (session: SavedSession) => {
+    const nextContestType = session.inputs.contestType || inferContestTypeFromField(session.inputs.field);
+    setContestType(nextContestType);
+    setKhktProjectType(session.inputs.khktProjectType || 'auto');
     setField(session.inputs.field);
     setCapHoc(session.inputs.capHoc);
     setGrade(session.inputs.grade);
@@ -1540,7 +1830,7 @@ Trình bày bằng Markdown, rõ ràng, ngắn gọn và có tính thực tế.`
       const isIdea = part.includes('Ý TƯỞNG') && !part.includes('TOP 3');
       const titleMatch = part.match(/^#{2,3} (.*)/m);
       const title = titleMatch ? titleMatch[1].replace('💡', '').trim() : '';
-      const scoreMatch = part.match(/\*\*Điểm đánh giá:\*\*\s*(\d{1,3})\s*\/\s*100/i);
+      const scoreMatch = part.match(/\*\*(?:Điểm đánh giá|Điểm rubric KHKT):\*\*[\s\S]{0,80}?(\d{1,3})\s*\/\s*100/i);
       const ideaScore = scoreMatch ? Math.min(100, Math.max(0, Number(scoreMatch[1]))) : null;
       const scoreClass = ideaScore === null
         ? 'bg-teal-900/40 text-teal-300 border-teal-700/50'
@@ -1564,7 +1854,7 @@ Trình bày bằng Markdown, rõ ràng, ngắn gọn và có tính thực tế.`
               <div className="flex flex-wrap items-center gap-3">
                 <div className={cn("px-4 py-2 rounded-xl font-bold text-sm border flex items-center gap-2 shadow-sm", scoreClass)}>
                   <Target className="w-4 h-4" />
-                  {ideaScore !== null ? `Điểm: ${ideaScore}/100` : 'Chưa có điểm'}
+                  {ideaScore !== null ? `${isKhktContest ? 'Rubric' : 'Điểm'}: ${ideaScore}/100` : 'Chưa có điểm'}
                 </div>
 
                 <button
@@ -1586,7 +1876,7 @@ Trình bày bằng Markdown, rõ ràng, ngắn gọn và có tính thực tế.`
                   className="px-4 py-2 rounded-xl font-semibold text-sm bg-cyan-900/40 text-cyan-300 border border-cyan-700/50 hover:bg-cyan-800/50 transition-colors flex items-center gap-2 shadow-sm"
                 >
                   {loadingInline[title] === 'comparing' ? <Loader2 className="w-4 h-4 animate-spin" /> : <GitCompare className="w-4 h-4" />}
-                  So sánh ý tưởng này
+                  So sánh {isKhktContest ? 'đề tài' : 'ý tưởng'} này
                 </button>
                 
                 {inlineComparisons[title] && (
@@ -1683,7 +1973,7 @@ Trình bày bằng Markdown, rõ ràng, ngắn gọn và có tính thực tế.`
                       timestamp: Date.now(),
                       title: cleanTitle,
                       content: content,
-                      inputs: { field, capHoc, grade }
+                      inputs: { contestType, khktProjectType, field, capHoc, grade }
                     };
                     setSavedIdeas(prev => [newIdea, ...prev]);
                   }
@@ -1695,10 +1985,10 @@ Trình bày bằng Markdown, rõ ràng, ngắn gọn và có tính thực tế.`
                   ? "text-emerald-300 bg-emerald-900/50 hover:bg-emerald-800/50 opacity-100 border border-emerald-700/50" 
                   : "text-teal-300 bg-teal-800/50 hover:text-emerald-300 hover:bg-emerald-900/40 sm:opacity-0 sm:group-hover:opacity-100 border border-teal-600/50"
               )}
-              title={isSaved ? "Bỏ lưu ý tưởng" : "Lưu ý tưởng này"}
+              title={isSaved ? "Bỏ lưu" : isKhktContest ? "Lưu đề tài này" : "Lưu ý tưởng này"}
             >
               <Heart className={cn("w-4 h-4", isSaved && "fill-current")} />
-              {isSaved ? "Đã lưu" : "Lưu ý tưởng"}
+              {isSaved ? "Đã lưu" : isKhktContest ? "Lưu đề tài" : "Lưu ý tưởng"}
             </button>
           )}
         </div>
@@ -1867,7 +2157,10 @@ Trình bày bằng Markdown, rõ ràng, ngắn gọn và có tính thực tế.`
             <div className="w-8 h-8 rounded-lg bg-emerald-500 flex items-center justify-center text-teal-950 shadow-sm shadow-emerald-500/20">
               <Lightbulb className="w-5 h-5" />
             </div>
-            IdeaGPT
+            <span>IdeaGPT</span>
+            <span className="text-[10px] px-2 py-0.5 rounded-md bg-teal-900/70 border border-teal-700/60 text-teal-200 font-extrabold tracking-wide">
+              {contestMeta.shortLabel}
+            </span>
           </div>
           <button 
             className="lg:hidden p-2 text-teal-400 hover:text-teal-200 hover:bg-teal-800/50 rounded-lg transition-colors"
@@ -1879,6 +2172,40 @@ Trình bày bằng Markdown, rõ ràng, ngắn gọn và có tính thực tế.`
 
         <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar">
           <div className="space-y-5">
+            <div className="space-y-2">
+              <label className="flex items-center gap-2 text-sm font-semibold text-teal-200">
+                <Target className="w-4 h-4 text-teal-400" />
+                Cuộc thi
+              </label>
+              <div className="grid grid-cols-2 gap-2">
+                {CONTEST_OPTIONS.map(option => (
+                  <button
+                    key={option.id}
+                    onClick={() => {
+                      if (contestType === option.id) return;
+                      setContestType(option.id);
+                      setResult('');
+                      setCompareResult('');
+                      setInlineComparisons({});
+                      setInlineEnhancements({});
+                      setInlineDetailedGuides({});
+                      setCurrentSessionId(null);
+                      setActiveTab('main');
+                    }}
+                    className={cn(
+                      "min-h-[56px] rounded-xl px-3 py-2 text-sm font-bold transition-all border flex flex-col items-start justify-center gap-0.5",
+                      contestType === option.id
+                        ? "bg-emerald-500 text-teal-950 border-emerald-400 shadow-sm shadow-emerald-500/20"
+                        : "bg-teal-900/50 text-teal-200 border-teal-700/50 hover:bg-teal-800/50"
+                    )}
+                  >
+                    <span>{option.shortLabel}</span>
+                    <span className="text-[10px] font-semibold opacity-80 leading-tight text-left">{option.id === 'khkt' ? '22 lĩnh vực' : 'Sáng tạo'}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
             <div className="space-y-2">
               <label className="flex items-center gap-2 text-sm font-semibold text-teal-200">
                 <Sparkles className="w-4 h-4 text-teal-400" />
@@ -1920,18 +2247,50 @@ Trình bày bằng Markdown, rõ ràng, ngắn gọn và có tính thực tế.`
             <div className="space-y-2">
               <label className="flex items-center gap-2 text-sm font-semibold text-teal-200">
                 <Layers className="w-4 h-4 text-teal-400" />
-                Lĩnh vực
+                {isKhktContest ? 'Lĩnh vực KHKT' : 'Lĩnh vực'}
               </label>
               <select
                 value={field}
                 onChange={(e) => setField(e.target.value)}
                 className="w-full p-2.5 bg-teal-900/50 border border-teal-700/50 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all text-teal-50 font-medium"
               >
-                {FIELD_OPTIONS.map((opt) => (
+                {activeFieldOptions.map((opt) => (
                   <option key={opt} value={opt} className="bg-teal-900 text-teal-50">{opt}</option>
                 ))}
               </select>
             </div>
+
+            {isKhktContest && (
+              <div className="space-y-4 rounded-2xl border border-teal-700/50 bg-teal-900/30 p-4">
+                <div className="space-y-2">
+                  <label className="flex items-center gap-2 text-sm font-semibold text-teal-200">
+                    <GitCompare className="w-4 h-4 text-teal-400" />
+                    Loại dự án
+                  </label>
+                  <select
+                    value={khktProjectType}
+                    onChange={(e) => setKhktProjectType(e.target.value as KhktProjectType)}
+                    className="w-full p-2.5 bg-teal-950/60 border border-teal-700/50 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all text-teal-50 font-medium"
+                  >
+                    {KHKT_PROJECT_TYPE_OPTIONS.map((opt) => (
+                      <option key={opt.value} value={opt.value} className="bg-teal-900 text-teal-50">{opt.label}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <div className="text-xs font-extrabold uppercase tracking-wide text-emerald-300 mb-3">Phiếu chấm KHKT</div>
+                  <div className="grid grid-cols-2 gap-2">
+                    {KHKT_RUBRIC_ITEMS.map(([label, score]) => (
+                      <div key={label} className="rounded-lg border border-teal-700/50 bg-teal-950/40 px-3 py-2">
+                        <div className="text-[11px] leading-snug text-teal-200">{label}</div>
+                        <div className="text-sm font-extrabold text-emerald-300">{score} điểm</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
@@ -1944,7 +2303,7 @@ Trình bày bằng Markdown, rõ ràng, ngắn gọn và có tính thực tế.`
                   onChange={(e) => setCapHoc(e.target.value)}
                   className="w-full p-2.5 bg-teal-900/50 border border-teal-700/50 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all text-teal-50 font-medium"
                 >
-                  {CAP_HOC_OPTIONS.map((opt) => (
+                  {activeCapHocOptions.map((opt) => (
                     <option key={opt} value={opt} className="bg-teal-900 text-teal-50">{opt}</option>
                   ))}
                 </select>
@@ -1957,10 +2316,16 @@ Trình bày bằng Markdown, rõ ràng, ngắn gọn và có tính thực tế.`
                 </label>
                 <select
                   value={grade}
-                  onChange={(e) => setGrade(e.target.value)}
+                  onChange={(e) => {
+                    const nextGrade = e.target.value;
+                    setGrade(nextGrade);
+                    if (nextGrade.startsWith('THCS')) setCapHoc('THCS');
+                    if (nextGrade.startsWith('THPT')) setCapHoc('THPT');
+                    if (nextGrade.startsWith('Tiểu học')) setCapHoc('Tiểu học');
+                  }}
                   className="w-full p-2.5 bg-teal-900/50 border border-teal-700/50 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all text-teal-50 font-medium"
                 >
-                  {GRADE_OPTIONS.map((opt) => (
+                  {activeGradeOptions.map((opt) => (
                     <option key={opt} value={opt} className="bg-teal-900 text-teal-50">{opt}</option>
                   ))}
                 </select>
@@ -2004,7 +2369,7 @@ Trình bày bằng Markdown, rõ ràng, ngắn gọn và có tính thực tế.`
               <textarea
                 value={context}
                 onChange={(e) => setContext(e.target.value)}
-                placeholder="Ví dụ: Trường ở vùng nông thôn, gần biển..."
+                placeholder={isKhktContest ? "Ví dụ: Trường gần biển, có phòng STEM, cần xử lý nước mặn..." : "Ví dụ: Trường ở vùng nông thôn, gần biển..."}
                 className="w-full p-3 bg-teal-900/50 border border-teal-700/50 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all min-h-[80px] resize-y text-teal-50 placeholder:text-teal-400/50"
               />
             </div>
@@ -2014,7 +2379,7 @@ Trình bày bằng Markdown, rõ ràng, ngắn gọn và có tính thực tế.`
               <textarea
                 value={resources}
                 onChange={(e) => setResources(e.target.value)}
-                placeholder="Ví dụ: Có sẵn bìa carton, chai nhựa, biết lập trình Scratch..."
+                placeholder={isKhktContest ? "Ví dụ: Có Arduino, cảm biến pH, cân điện tử, Excel, máy in 3D..." : "Ví dụ: Có sẵn bìa carton, chai nhựa, biết lập trình Scratch..."}
                 className="w-full p-3 bg-teal-900/50 border border-teal-700/50 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all min-h-[80px] resize-y text-teal-50 placeholder:text-teal-400/50"
               />
             </div>
@@ -2033,7 +2398,7 @@ Trình bày bằng Markdown, rõ ràng, ngắn gọn và có tính thực tế.`
                 <textarea
                   value={problem}
                   onChange={(e) => setProblem(e.target.value)}
-                  placeholder="Ví dụ: học sinh dân tộc khó ghi nhớ từ vựng, ngại phát biểu, thiếu Internet..."
+                  placeholder={isKhktContest ? "Ví dụ: nước uống ở trường có độ đục cao, cây trong vườn trường chết khi nắng nóng..." : "Ví dụ: học sinh dân tộc khó ghi nhớ từ vựng, ngại phát biểu, thiếu Internet..."}
                   className="w-full p-3 bg-teal-900/50 border border-teal-700/50 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all min-h-[82px] resize-y text-teal-50 placeholder:text-teal-400/50"
                 />
               </div>
@@ -2046,7 +2411,7 @@ Trình bày bằng Markdown, rõ ràng, ngắn gọn và có tính thực tế.`
                 <textarea
                   value={avoidIdeas}
                   onChange={(e) => setAvoidIdeas(e.target.value)}
-                  placeholder="Ví dụ: không lấy app nhắc học, thùng rác thông minh, robot tưới cây..."
+                  placeholder={isKhktContest ? "Ví dụ: không lấy máy lọc nước mini, robot tưới cây, thùng rác thông minh..." : "Ví dụ: không lấy app nhắc học, thùng rác thông minh, robot tưới cây..."}
                   className="w-full p-3 bg-teal-900/50 border border-teal-700/50 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all min-h-[82px] resize-y text-teal-50 placeholder:text-teal-400/50"
                 />
               </div>
@@ -2081,7 +2446,7 @@ Trình bày bằng Markdown, rõ ràng, ngắn gọn và có tính thực tế.`
             ) : (
               <>
                 <Sparkles className="w-5 h-5" />
-                Tạo Ý Tưởng
+                {contestMeta.actionLabel}
               </>
             )}
           </button>
@@ -2183,7 +2548,7 @@ Trình bày bằng Markdown, rõ ràng, ngắn gọn và có tính thực tế.`
                 : "border-transparent text-teal-400 hover:text-teal-200"
             )}
           >
-            Kết quả Ý Tưởng
+            {contestMeta.resultTab}
           </button>
           {compareResult && (
             <button
@@ -2232,7 +2597,7 @@ Trình bày bằng Markdown, rõ ràng, ngắn gọn và có tính thực tế.`
                 <div className="flex items-center justify-between">
                   <h2 className="text-2xl font-bold text-teal-50 flex items-center gap-2">
                     <Heart className="w-6 h-6 text-emerald-400 fill-current" />
-                    Ý tưởng đã lưu
+                    Ý tưởng/Đề tài đã lưu
                   </h2>
                   <span className="text-sm text-teal-200 font-medium bg-teal-900/50 px-3 py-1 rounded-full border border-teal-700/50">
                     {savedIdeas.length} ý tưởng
@@ -2242,8 +2607,8 @@ Trình bày bằng Markdown, rõ ràng, ngắn gọn và có tính thực tế.`
                 {savedIdeas.length === 0 ? (
                   <div className="bg-teal-900/40 backdrop-blur-sm rounded-2xl shadow-sm border border-teal-700/50 p-12 text-center">
                     <Heart className="w-12 h-12 text-teal-700 mx-auto mb-4" />
-                    <h3 className="text-lg font-bold text-teal-100 mb-2">Chưa có ý tưởng nào</h3>
-                    <p className="text-teal-300">Hãy nhấn nút "Lưu ý tưởng" bên cạnh mỗi ý tưởng để lưu lại nhé.</p>
+                    <h3 className="text-lg font-bold text-teal-100 mb-2">Chưa có mục nào</h3>
+                    <p className="text-teal-300">Hãy nhấn nút "Lưu ý tưởng" bên cạnh mỗi đề xuất để lưu lại.</p>
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 gap-6">
@@ -2257,6 +2622,9 @@ Trình bày bằng Markdown, rõ ràng, ngắn gọn và có tính thực tế.`
                           <Trash2 className="w-5 h-5" />
                         </button>
                         <div className="flex items-center gap-2 mb-6">
+                           <span className="text-xs font-bold text-emerald-300 bg-emerald-900/30 px-2.5 py-1 rounded-lg border border-emerald-700/50">
+                             {getContestMeta(idea.inputs.contestType || inferContestTypeFromField(idea.inputs.field)).shortLabel}
+                           </span>
                            <span className="text-xs font-medium text-teal-200 bg-teal-800/50 px-2.5 py-1 rounded-lg border border-teal-700/50">{idea.inputs.field}</span>
                            <span className="text-xs font-medium text-teal-200 bg-teal-800/50 px-2.5 py-1 rounded-lg border border-teal-700/50">{idea.inputs.grade}</span>
                            <span className="text-xs font-medium text-teal-400 flex items-center gap-1 ml-auto">
@@ -2366,11 +2734,22 @@ Trình bày bằng Markdown, rõ ràng, ngắn gọn và có tính thực tế.`
                             <Trash2 className="w-4 h-4" />
                           </button>
                         </div>
-                        <h4 className="font-bold text-teal-50 mb-1.5 line-clamp-1 text-base">{session.inputs.field}</h4>
+                        <div className="flex items-center gap-2 mb-1.5">
+                          <span className="text-[10px] font-extrabold text-emerald-300 bg-emerald-900/30 px-2 py-0.5 rounded-md border border-emerald-700/50">
+                            {getContestMeta(session.inputs.contestType || inferContestTypeFromField(session.inputs.field)).shortLabel}
+                          </span>
+                          <h4 className="font-bold text-teal-50 line-clamp-1 text-base">{session.inputs.field}</h4>
+                        </div>
                         <p className="text-sm text-teal-200 mb-4 flex items-center gap-2">
                           <span className="bg-teal-800/50 px-2 py-0.5 rounded text-xs border border-teal-700/50">{session.inputs.capHoc}</span>
                           <span className="text-teal-600">•</span>
                           <span className="truncate">{session.inputs.grade}</span>
+                          {session.inputs.contestType === 'khkt' && (
+                            <>
+                              <span className="text-teal-600">•</span>
+                              <span className="truncate">{getKhktProjectTypeLabel(session.inputs.khktProjectType || 'auto')}</span>
+                            </>
+                          )}
                         </p>
                         <div className="flex items-center justify-between pt-3 border-t border-teal-800/50">
                           <div className="flex items-center text-emerald-400 text-sm font-semibold gap-1.5 group-hover:translate-x-1 transition-transform">
@@ -2398,9 +2777,9 @@ Trình bày bằng Markdown, rõ ràng, ngắn gọn và có tính thực tế.`
                     <div className="w-20 h-20 bg-teal-900/50 rounded-2xl flex items-center justify-center mb-6 shadow-sm border border-teal-700/50">
                       <Lightbulb className="w-10 h-10 text-emerald-500/50" />
                     </div>
-                    <h2 className="text-xl font-bold text-teal-100 mb-2">Chưa có dữ liệu</h2>
+                    <h2 className="text-xl font-bold text-teal-100 mb-2">{contestMeta.emptyTitle}</h2>
                     <p className="text-teal-300 text-center max-w-sm">
-                      Hãy điền các thông tin cần thiết ở thanh bên trái và nhấn <strong className="text-teal-50">Tạo Ý Tưởng</strong> để bắt đầu.
+                      Hãy điền các thông tin cần thiết ở thanh bên trái và nhấn <strong className="text-teal-50">{contestMeta.actionLabel}</strong> để bắt đầu.
                     </p>
                   </motion.div>
                 ) : isGenerating && !result ? (
@@ -2412,8 +2791,10 @@ Trình bày bằng Markdown, rõ ràng, ngắn gọn và có tính thực tế.`
                       </div>
                     </div>
                     <h3 className="text-xl font-bold mb-4 text-teal-50 text-center px-4">{loadingMessage}</h3>
-                    <p className="font-medium text-center max-w-md text-teal-300">
-                      Hệ thống đang phân tích bằng AI nâng cao để đảm bảo các ý tưởng đề xuất có tính mới và sáng tạo cao nhất. Quá trình này có thể mất thêm chút thời gian.
+                      <p className="font-medium text-center max-w-md text-teal-300">
+                      {isKhktContest
+                        ? 'Hệ thống đang phân tích bằng AI nâng cao để đề xuất đề tài bám 22 lĩnh vực và phiếu chấm KHKT 100 điểm. Quá trình này có thể mất thêm chút thời gian.'
+                        : 'Hệ thống đang phân tích bằng AI nâng cao để đảm bảo các ý tưởng đề xuất có tính mới và sáng tạo cao nhất. Quá trình này có thể mất thêm chút thời gian.'}
                     </p>
                   </div>
                 ) : (
@@ -2434,7 +2815,7 @@ Trình bày bằng Markdown, rõ ràng, ngắn gọn và có tính thực tế.`
                   >
                     <div className="flex-1">
                       <h3 className="text-sm font-bold text-teal-50 mb-1">Hành động tiếp theo</h3>
-                      <p className="text-xs text-teal-300">Tạo lại danh sách mới hoặc so sánh chuyên sâu một ý tưởng.</p>
+                      <p className="text-xs text-teal-300">Tạo lại danh sách mới hoặc so sánh chuyên sâu một {isKhktContest ? 'đề tài' : 'ý tưởng'}.</p>
                     </div>
                     
                     <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
@@ -2449,7 +2830,7 @@ Trình bày bằng Markdown, rõ ràng, ngắn gọn và có tính thực tế.`
                       <div className="flex items-center gap-2 flex-1 sm:flex-none">
                         <button
                           onClick={() => {
-                            generateAndDownloadWordDoc(result, `Ý Tưởng Sáng Tạo - ${field}`);
+                            generateAndDownloadWordDoc(result, `${isKhktContest ? 'Đề tài KHKT' : 'Ý Tưởng Sáng Tạo'} - ${field}`);
                           }}
                           className="px-5 py-2.5 bg-teal-800/50 border border-teal-600/50 hover:bg-teal-700/50 hover:border-teal-500/50 text-teal-100 rounded-xl font-semibold flex items-center justify-center gap-2 transition-all shadow-sm active:scale-[0.98]"
                         >
@@ -2464,7 +2845,7 @@ Trình bày bằng Markdown, rõ ràng, ngắn gọn và có tính thực tế.`
                           className="p-2.5 bg-teal-900/50 border border-teal-700/50 rounded-xl text-sm font-medium focus:ring-2 focus:ring-emerald-500/20 outline-none text-teal-50"
                         >
                           {Array.from({ length: 20 }, (_, index) => index + 1).map(num => (
-                            <option key={num} value={num} className="bg-teal-900 text-teal-50">Ý tưởng {num}</option>
+                            <option key={num} value={num} className="bg-teal-900 text-teal-50">{isKhktContest ? 'Đề tài' : 'Ý tưởng'} {num}</option>
                           ))}
                         </select>
                         <button
