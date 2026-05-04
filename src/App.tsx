@@ -147,6 +147,13 @@ async function readApiJson(response: Response) {
 type ContestType = 'creative' | 'khkt';
 type KhktProjectType = 'auto' | 'science' | 'engineering';
 
+type KhktFieldGuide = {
+  officialScope: string;
+  researchFocus: string;
+  breakthroughAngles: string[];
+  feasibleEvidence: string;
+};
+
 const CONTEST_OPTIONS: {
   id: ContestType;
   label: string;
@@ -211,6 +218,265 @@ const KHKT_FIELD_OPTIONS = [
   'Phần mềm hệ thống',
   'Y học chuyển dịch',
 ];
+
+const KHKT_FIELD_GUIDES: Record<string, KhktFieldGuide> = {
+  'Khoa học động vật': {
+    officialScope: 'Đời sống động vật: cấu trúc, sinh lý, phát triển, phân loại, hành vi, sinh thái, dinh dưỡng, tăng trưởng, di truyền, chăn nuôi, thủy sản và côn trùng.',
+    researchFocus: 'Tập trung vào một loài/nhóm loài cụ thể, đo được thay đổi hành vi, tăng trưởng, sức khỏe, môi trường sống hoặc tương tác sinh thái bằng quan sát định lượng.',
+    breakthroughAngles: [
+      'Theo dõi hành vi/sức khỏe không xâm lấn bằng cảm biến rẻ tiền hoặc thị giác máy tính.',
+      'Giải pháp giảm stress, tăng phúc lợi, tăng hiệu quả nuôi trồng cho vật nuôi địa phương.',
+      'Mô hình cảnh báo sớm dịch hại/côn trùng có ích dựa trên dữ liệu môi trường.'
+    ],
+    feasibleEvidence: 'Nhật ký quan sát, ảnh/video có nhãn, chỉ số tăng trưởng, điều kiện môi trường, nhóm đối chứng và phân tích thống kê đơn giản.'
+  },
+  'Khoa học xã hội và hành vi': {
+    officialScope: 'Hành vi, nhận thức, tâm lý, giáo dục, xã hội học, nhân học, tương tác nhóm người và các yếu tố ảnh hưởng đến quyết định của con người.',
+    researchFocus: 'Thiết kế khảo sát, thí nghiệm hành vi hoặc can thiệp giáo dục có biến độc lập, biến phụ thuộc, mẫu khảo sát rõ và xử lý thiên lệch dữ liệu.',
+    breakthroughAngles: [
+      'Can thiệp hành vi nhỏ nhưng đo được tác động lớn trong học tập, an toàn số, môi trường hoặc sức khỏe tinh thần học đường.',
+      'Kết hợp dữ liệu khảo sát với nhật ký số/AI phân tích văn bản để phát hiện mẫu hành vi mới.',
+      'Mô hình ra quyết định phù hợp văn hóa địa phương thay vì sao chép nghiên cứu nước ngoài.'
+    ],
+    feasibleEvidence: 'Bảng hỏi chuẩn hóa, phiếu đồng thuận, trước-sau can thiệp, nhóm so sánh, thống kê mô tả, kiểm định đơn giản và phân tích hạn chế mẫu.'
+  },
+  'Hóa sinh': {
+    officialScope: 'Hóa sinh phân tích, hóa sinh tổng hợp, hóa sinh y, hóa sinh cấu trúc; nghiên cứu phân tử, enzyme, protein, lipid, đường, chất chuyển hóa trong hệ sống.',
+    researchFocus: 'Làm rõ cơ chế hóa học trong hệ sinh học bằng phép đo định lượng an toàn như pH, quang phổ màu, hoạt tính enzyme, khả năng chống oxy hóa hoặc mô phỏng phân tử.',
+    breakthroughAngles: [
+      'Tận dụng phụ phẩm nông nghiệp địa phương để tạo hoạt chất sinh học có dữ liệu định lượng.',
+      'So sánh cơ chế chiết tách, bảo quản hoặc ổn định hoạt chất thay vì chỉ làm sản phẩm thô.',
+      'Kết hợp mô phỏng tính chất phân tử với thí nghiệm đơn giản để tăng chiều sâu khoa học.'
+    ],
+    feasibleEvidence: 'Quy trình chiết/đo lặp lại, đường chuẩn hoặc thang màu, so sánh mẫu đối chứng, biểu đồ sai số và giải thích cơ chế hóa sinh.'
+  },
+  'Y sinh và khoa học sức khỏe': {
+    officialScope: 'Chẩn đoán, điều trị, dược liệu, dịch tễ học, dinh dưỡng, sinh lý học, bệnh lý học và các yếu tố ảnh hưởng sức khỏe con người.',
+    researchFocus: 'Ưu tiên nghiên cứu an toàn, không can thiệp y khoa rủi ro: sàng lọc, dự báo, dinh dưỡng, hành vi sức khỏe, thiết bị hỗ trợ hoặc phân tích dữ liệu công khai.',
+    breakthroughAngles: [
+      'Mô hình sàng lọc sớm nguy cơ sức khỏe học đường bằng dữ liệu phi xâm lấn.',
+      'Cá nhân hóa khuyến nghị dinh dưỡng/vận động dựa trên dữ liệu đo được, có đối chứng.',
+      'Ứng dụng AI giải thích được cho dữ liệu sức khỏe công khai hoặc dữ liệu tự thu thập hợp lệ.'
+    ],
+    feasibleEvidence: 'Dữ liệu ẩn danh, tiêu chí đạo đức, chỉ số sức khỏe phi xâm lấn, so sánh baseline, độ chính xác/độ nhạy/độ đặc hiệu nếu có mô hình dự báo.'
+  },
+  'Kĩ thuật y sinh': {
+    officialScope: 'Vật liệu y sinh, cơ chế sinh học, thiết bị y sinh, kỹ thuật tế bào và mô, sinh học tổng hợp theo hướng thiết kế công cụ hoặc hệ thống hỗ trợ y tế.',
+    researchFocus: 'Tạo nguyên mẫu thiết bị, cảm biến, vật liệu hoặc hệ hỗ trợ phục hồi/chăm sóc sức khỏe, chứng minh bằng thử nghiệm mô phỏng an toàn.',
+    breakthroughAngles: [
+      'Thiết bị trợ giúp người khuyết tật có AI/cảm biến, chi phí thấp, dùng được trong bối cảnh Việt Nam.',
+      'Cảm biến y sinh phi xâm lấn kết hợp cảnh báo thông minh và kiểm thử độ tin cậy.',
+      'Vật liệu/thiết kế mô phỏng chức năng y sinh nhưng không đụng thử nghiệm nguy hiểm.'
+    ],
+    feasibleEvidence: 'Bản vẽ kỹ thuật, nguyên mẫu, sai số cảm biến, độ trễ, độ bền, thử nghiệm với mô hình giả lập và phản hồi người dùng mục tiêu.'
+  },
+  'Sinh học tế bào và phân tử': {
+    officialScope: 'Sinh lý tế bào, gen, miễn dịch, sinh học phân tử, sinh học thần kinh và các quá trình ở cấp tế bào/phân tử.',
+    researchFocus: 'Chọn hệ mô hình an toàn như thực vật, nấm men thực phẩm, dữ liệu công khai hoặc mô phỏng để nghiên cứu biểu hiện, phát triển, stress sinh học hoặc tương tác phân tử.',
+    breakthroughAngles: [
+      'Dùng dữ liệu mở về gen/protein để tìm dấu hiệu sinh học có thể kiểm chứng bằng mô phỏng.',
+      'Nghiên cứu phản ứng stress ở tế bào thực vật với biến môi trường gần gũi.',
+      'Kết hợp kính hiển vi/ảnh tế bào với AI phân loại định lượng.'
+    ],
+    feasibleEvidence: 'Ảnh hiển vi, chỉ số hình thái, dữ liệu công khai có nguồn, quy trình an toàn sinh học, lặp thí nghiệm và phân tích định lượng.'
+  },
+  'Hóa học': {
+    officialScope: 'Hóa phân tích, hóa học trên máy tính, hóa môi trường, hóa vô cơ, hóa vật liệu, hóa hữu cơ, hóa lý; nghiên cứu thành phần, cấu trúc, tính chất và phản ứng của vật chất.',
+    researchFocus: 'Đặt câu hỏi hóa học có thể đo: hấp phụ, xúc tác, đổi màu, pH, độ dẫn, tốc độ phản ứng, tính bền, khả năng phân hủy hoặc mô phỏng cấu trúc.',
+    breakthroughAngles: [
+      'Vật liệu xanh xử lý ô nhiễm với cơ chế hấp phụ/xúc tác được chứng minh.',
+      'Cảm biến hóa học màu hoặc điện hóa giá rẻ cho vấn đề trường học/địa phương.',
+      'Tối ưu hóa phản ứng bằng thiết kế thí nghiệm và mô hình dự báo.'
+    ],
+    feasibleEvidence: 'Mẫu đối chứng, đường chuẩn, ảnh màu chuẩn hóa, dữ liệu pH/độ dẫn/khối lượng, hiệu suất, tái sử dụng vật liệu và biểu đồ sai số.'
+  },
+  'Sinh học trên máy tính và Sinh - Tin': {
+    officialScope: 'Mô hình sinh học tính toán, dịch tễ học tính toán, tiến hóa, thần kinh tính toán, dược lý tính toán, genomics và phân tích dữ liệu sinh học.',
+    researchFocus: 'Dùng thuật toán, mô hình toán, mô phỏng hoặc AI để phân tích hệ sinh học, dịch bệnh, gen, protein, thuốc hoặc hành vi sinh học từ dữ liệu đáng tin.',
+    breakthroughAngles: [
+      'Khai thác bộ dữ liệu mở quốc tế để tìm dấu hiệu sinh học mới, có khả năng giải thích.',
+      'Mô hình dự báo dịch/bệnh/cây trồng có yếu tố địa phương và kiểm định trên dữ liệu thật.',
+      'AI sinh học giải thích được, so sánh nhiều thuật toán và tránh hộp đen.'
+    ],
+    feasibleEvidence: 'Nguồn dữ liệu mở, tiền xử lý rõ, metric như accuracy/F1/AUC/RMSE, baseline, cross-validation và phân tích ý nghĩa sinh học.'
+  },
+  'Khoa học Trái đất và Môi trường': {
+    officialScope: 'Khí quyển, khí hậu, tác động môi trường lên hệ sinh thái, địa chất, nước và các hệ Trái đất.',
+    researchFocus: 'Nghiên cứu hiện tượng môi trường và hệ quả của nó bằng đo đạc/quan sát: vi khí hậu, nước, đất, chất lượng không khí, xói mòn, ngập, đa dạng sinh học.',
+    breakthroughAngles: [
+      'Bản đồ rủi ro môi trường cấp trường/xã bằng cảm biến, GIS và dữ liệu vệ tinh mở.',
+      'Mô hình dự báo vi khí hậu, ngập cục bộ hoặc chất lượng nước có kiểm chứng thực địa.',
+      'Liên hệ dữ liệu môi trường với tác động lên cây trồng, sức khỏe học đường hoặc hệ sinh thái.'
+    ],
+    feasibleEvidence: 'Chuỗi đo theo thời gian, tọa độ mẫu, ảnh hiện trường, dữ liệu vệ tinh/công khai, bản đồ, so sánh mùa/địa điểm và kiểm định tương quan.'
+  },
+  'Hệ thống nhúng': {
+    officialScope: 'Mạch điện, vi điều khiển, IoT, truyền thông dữ liệu, quang học, cảm biến và xử lý tín hiệu trong hệ thống điện tử điều khiển/cảm nhận.',
+    researchFocus: 'Thiết kế hệ phần cứng-phần mềm đo, truyền, xử lý hoặc điều khiển tín hiệu; điểm mạnh nằm ở độ ổn định, sai số, năng lượng, bảo mật và thử nghiệm thực tế.',
+    breakthroughAngles: [
+      'Mạng cảm biến rẻ tiền nhưng tự hiệu chuẩn, tiết kiệm năng lượng và hoạt động ngoài hiện trường.',
+      'Xử lý tín hiệu tại biên để cảnh báo nhanh mà không phụ thuộc Internet.',
+      'Thiết kế IoT có bảo mật, khả năng chịu lỗi và dữ liệu kiểm thử nhiều điều kiện.'
+    ],
+    feasibleEvidence: 'Sơ đồ mạch, mã nhúng, sai số cảm biến, độ trễ, pin, tỉ lệ mất gói, log dữ liệu, thử nghiệm nóng/ẩm/nhiễu và so sánh thiết bị chuẩn.'
+  },
+  'Năng lượng: Hóa học': {
+    officialScope: 'Nhiên liệu thay thế, năng lượng hóa thạch, pin, tế bào nhiên liệu, vật liệu năng lượng mặt trời và quá trình chuyển hóa/lưu trữ năng lượng theo hướng hóa học.',
+    researchFocus: 'Nghiên cứu vật liệu, phản ứng hoặc hệ lưu trữ/chuyển hóa năng lượng có đo hiệu suất, điện áp, dòng, độ bền, chu kỳ sạc-xả hoặc sản lượng nhiên liệu.',
+    breakthroughAngles: [
+      'Pin/supercapacitor từ vật liệu sinh khối, than hoạt tính, polymer hoặc composite xanh.',
+      'Tế bào nhiên liệu vi sinh/sinh khối an toàn với tối ưu vật liệu điện cực.',
+      'Vật liệu hấp thụ/quang xúc tác tăng hiệu suất thu năng lượng mặt trời.'
+    ],
+    feasibleEvidence: 'Đường cong sạc-xả, điện áp/dòng/công suất, số chu kỳ, hiệu suất, khối lượng vật liệu, điều kiện thí nghiệm và so sánh mẫu thương mại hoặc đối chứng.'
+  },
+  'Năng lượng: Vật lí': {
+    officialScope: 'Thủy điện, năng lượng mặt trời, nhiệt, gió, hạt nhân ở mức mô phỏng an toàn và các hệ chuyển đổi năng lượng dựa trên hiện tượng vật lý.',
+    researchFocus: 'Thiết kế/mô phỏng/kiểm thử hệ thu, chuyển đổi, tối ưu năng lượng bằng các đại lượng vật lý như công suất, hiệu suất, góc, tốc độ gió, nhiệt độ, bức xạ.',
+    breakthroughAngles: [
+      'Cơ cấu tối ưu hóa thu năng lượng trong điều kiện gió/nắng không ổn định ở địa phương.',
+      'Thu hồi nhiệt thải hoặc rung động nhỏ bằng thiết kế vật lý chi phí thấp.',
+      'Mô hình lai năng lượng gió-mặt trời-nhiệt có bộ điều khiển tối ưu.'
+    ],
+    feasibleEvidence: 'Bộ đo công suất, dữ liệu thời gian thực, so sánh cấu hình, hiệu suất, mô phỏng và kiểm thử ngoài trời nhiều điều kiện.'
+  },
+  'Kĩ thuật cơ khí': {
+    officialScope: 'Hàng không, dân dụng, cơ học tính toán, điều khiển, phương tiện mặt đất, gia công công nghiệp, máy móc, cơ khí và hệ hàng hải.',
+    researchFocus: 'Giải quyết vấn đề chuyển động, lực, kết cấu, truyền động, độ bền, tối ưu hình học hoặc điều khiển cơ khí bằng mô hình/thiết kế/nguyên mẫu.',
+    breakthroughAngles: [
+      'Cơ cấu mới giúp giảm lực, tiết kiệm năng lượng hoặc tăng an toàn trong lao động/học đường.',
+      'Tối ưu kết cấu bằng mô phỏng và in 3D/ gia công đơn giản.',
+      'Thiết bị cơ điện tử phục vụ nông nghiệp, người yếu thế hoặc ứng phó thiên tai.'
+    ],
+    feasibleEvidence: 'Bản CAD, mô phỏng lực, nguyên mẫu, tải trọng, độ bền, hiệu suất cơ học, thử nghiệm lặp lại và so sánh thiết kế cũ-mới.'
+  },
+  'Kĩ thuật môi trường': {
+    officialScope: 'Xử lý môi trường bằng sinh học, cải tạo đất, kiểm soát ô nhiễm, tái chế/quản lý chất thải và quản lý nguồn nước.',
+    researchFocus: 'Tạo quy trình, vật liệu, thiết bị hoặc mô hình hạ tầng để xử lý nước/khí/rác/đất; phải chứng minh hiệu quả bằng chỉ số môi trường.',
+    breakthroughAngles: [
+      'Hệ xử lý nước/rác quy mô trường học dùng vật liệu địa phương, có cơ chế khoa học rõ.',
+      'Tái chế chất thải thành vật liệu có tính năng đo được thay vì sản phẩm trang trí.',
+      'Giải pháp quan trắc và dự báo ô nhiễm kết hợp IoT, bản đồ và khuyến nghị vận hành.'
+    ],
+    feasibleEvidence: 'Chỉ số trước-sau như độ đục, pH, TDS, COD mô phỏng an toàn, khối lượng rác giảm, độ bền vật liệu, chi phí và thử nghiệm nhiều mẫu.'
+  },
+  'Khoa học vật liệu': {
+    officialScope: 'Vật liệu sinh học, gốm-thủy tinh, composite, vật liệu điện tử/quang/từ, nano, polymer, cấu trúc và tính chất vật liệu.',
+    researchFocus: 'Nghiên cứu mối liên hệ giữa thành phần-cấu trúc-quy trình-tính chất; điểm mạnh là đo cơ tính, hấp phụ, dẫn điện, cách nhiệt, quang học hoặc độ bền.',
+    breakthroughAngles: [
+      'Composite xanh từ phụ phẩm địa phương có tính năng vượt vật liệu nền.',
+      'Vật liệu thông minh đổi màu, tự làm sạch, hấp phụ, cách nhiệt hoặc cảm biến.',
+      'Vật liệu nano/polymer an toàn với cơ chế và khả năng tái sử dụng rõ.'
+    ],
+    feasibleEvidence: 'Công thức vật liệu, quy trình chế tạo, ảnh cấu trúc, độ bền kéo/nén/uốn, hấp phụ, dẫn điện/nhiệt, chu kỳ tái sử dụng và so sánh vật liệu chuẩn.'
+  },
+  'Toán học': {
+    officialScope: 'Đại số, giải tích, toán rời rạc, lý thuyết trò chơi và đồ thị, hình học-tô pô, lý thuyết số, xác suất và thống kê.',
+    researchFocus: 'Tạo định lý, mô hình, thuật toán, chứng minh hoặc phương pháp thống kê mới/hiệu quả hơn cho một bài toán rõ ràng.',
+    breakthroughAngles: [
+      'Mô hình tối ưu hóa lịch học, giao thông, mạng lưới hoặc phân bổ tài nguyên địa phương.',
+      'Thuật toán đồ thị/xác suất có chứng minh và thử nghiệm trên dữ liệu thật.',
+      'Mô hình thống kê phát hiện bất thường, dự báo rủi ro hoặc đánh giá công bằng.'
+    ],
+    feasibleEvidence: 'Phát biểu bài toán, chứng minh, độ phức tạp, mô phỏng, dữ liệu kiểm thử, so sánh thuật toán baseline và phân tích sai số.'
+  },
+  'Vi sinh': {
+    officialScope: 'Vi khuẩn, vi sinh ứng dụng, vi sinh môi trường, vi-rút, kháng sinh và các tương tác vi sinh; cần tuân thủ an toàn sinh học.',
+    researchFocus: 'Ưu tiên vi sinh an toàn như nấm men, men lactic, vi sinh thực phẩm hoặc dữ liệu công khai; nghiên cứu lên men, phân hủy, ức chế tự nhiên, môi trường hoặc ứng dụng sinh học.',
+    breakthroughAngles: [
+      'Quy trình lên men/vi sinh vật có ích tạo sản phẩm xanh với dữ liệu tối ưu hóa.',
+      'Vi sinh môi trường xử lý chất hữu cơ, nước thải mô phỏng hoặc rác sinh học an toàn.',
+      'Phân tích dữ liệu microbiome công khai bằng sinh tin để tìm mẫu mới.'
+    ],
+    feasibleEvidence: 'Quy trình vô trùng cơ bản, chủng an toàn, số khuẩn lạc hoặc chỉ số lên men, mẫu đối chứng, nhiệt độ/thời gian, ảnh đĩa cấy và quy định an toàn.'
+  },
+  'Vật lí và Thiên văn': {
+    officialScope: 'Thiên văn, vật lý nguyên tử-phân tử-quang học, lý-sinh, vật lý tính toán, vật lý thiên văn, vật liệu đo, điện-từ-plasma, cơ học, quang học, laser, sóng điện từ, lượng tử và lý thuyết.',
+    researchFocus: 'Đặt bài toán vật lý đo được hoặc mô phỏng được: quang, sóng, cơ, nhiệt, điện-từ, vật liệu đo, ảnh thiên văn hoặc mô hình tính toán.',
+    breakthroughAngles: [
+      'Thiết bị đo vật lý/thiên văn tự chế có hiệu chuẩn và xử lý tín hiệu tốt.',
+      'Mô hình quang-cơ-điện từ giải quyết vấn đề thực tế như đo chất lượng, truyền thông, an toàn.',
+      'Phân tích dữ liệu thiên văn mở bằng thuật toán để phát hiện/ phân loại hiện tượng.'
+    ],
+    feasibleEvidence: 'Thiết bị đo, hiệu chuẩn, sai số, chuỗi dữ liệu, mô phỏng, ảnh/ phổ/ tín hiệu, so sánh lý thuyết-thực nghiệm và phân tích độ không chắc chắn.'
+  },
+  'Khoa học thực vật': {
+    officialScope: 'Nông nghiệp, tương tác với môi trường, gen và sinh sản, tăng trưởng-phát triển, bệnh lý, sinh lý, hệ thống và tiến hóa thực vật.',
+    researchFocus: 'Nghiên cứu cây trồng/thực vật bằng biến môi trường, dinh dưỡng, stress, bệnh, sinh trưởng, sinh lý, năng suất hoặc tương tác hệ sinh thái.',
+    breakthroughAngles: [
+      'Canh tác thông minh thích ứng nắng nóng, mặn, thiếu nước hoặc ô nhiễm địa phương.',
+      'Chế phẩm sinh học/vật liệu giữ nước/kích thích sinh trưởng có cơ chế và đối chứng.',
+      'AI phân tích ảnh lá/cây để phát hiện stress sớm và đề xuất can thiệp.'
+    ],
+    feasibleEvidence: 'Chiều cao, số lá, diện tích lá, khối lượng, độ ẩm đất, EC/pH, ảnh theo thời gian, nhóm đối chứng, lặp mẫu và phân tích thống kê.'
+  },
+  'Rô-bốt và máy thông minh': {
+    officialScope: 'Máy sinh học, lý thuyết điều khiển, robot động lực/động học, hệ nhận thức, máy học và hệ giảm phụ thuộc vào can thiệp con người.',
+    researchFocus: 'Thiết kế robot/hệ thông minh có cảm nhận-quyết định-hành động, chứng minh bằng nhiệm vụ cụ thể, môi trường thay đổi và tiêu chí hiệu năng.',
+    breakthroughAngles: [
+      'Robot phục vụ cộng đồng có khả năng thích nghi môi trường Việt Nam thay vì chỉ chạy demo.',
+      'AI biên cho nhận diện/điều khiển nhanh, ít dữ liệu, tiết kiệm năng lượng.',
+      'Cơ cấu robot mềm, robot sinh học hoặc điều khiển lai mới có thử nghiệm định lượng.'
+    ],
+    feasibleEvidence: 'Nguyên mẫu, sơ đồ điều khiển, dữ liệu huấn luyện, tỉ lệ thành công, thời gian hoàn thành, độ chính xác, thử nghiệm nhiều địa hình/ánh sáng/tải trọng.'
+  },
+  'Phần mềm hệ thống': {
+    officialScope: 'Thuật toán, an ninh máy tính, cơ sở dữ liệu, hệ điều hành, ngôn ngữ lập trình, giao diện người-máy và hệ phần mềm điều khiển/phân tích quy trình.',
+    researchFocus: 'Không chỉ làm app; phải có thuật toán, kiến trúc, mô hình dữ liệu, bảo mật, hiệu năng, khả năng mở rộng hoặc phương pháp phần mềm được kiểm chứng.',
+    breakthroughAngles: [
+      'AI/thuật toán giải bài toán thực tế có bộ dữ liệu, baseline và khả năng giải thích.',
+      'Hệ phần mềm an toàn, riêng tư, chống gian lận hoặc bảo vệ trẻ em trên môi trường số.',
+      'Nền tảng học tập/giám sát/thông tin có đánh giá hiệu quả thực nghiệm với người dùng.'
+    ],
+    feasibleEvidence: 'Kho dữ liệu, mã nguồn, kiến trúc, metric accuracy/F1/latency, kiểm thử bảo mật, so sánh baseline, khảo sát người dùng và nhật ký lỗi.'
+  },
+  'Y học chuyển dịch': {
+    officialScope: 'Khám bệnh và chẩn đoán, phòng bệnh, điều trị, kiểm định thuốc, nghiên cứu tiền lâm sàng; chuyển phát hiện y sinh thành công cụ lâm sàng/y tế công cộng.',
+    researchFocus: 'Chuyển một phát hiện hoặc dữ liệu y sinh thành công cụ sàng lọc, dự báo, phòng bệnh hoặc đánh giá can thiệp; ưu tiên mô phỏng, dữ liệu mở và thử nghiệm phi lâm sàng an toàn.',
+    breakthroughAngles: [
+      'Công cụ chẩn đoán/sàng lọc sớm từ dữ liệu ảnh, tín hiệu hoặc triệu chứng phi xâm lấn.',
+      'Mô hình phòng bệnh cá nhân hóa cho học sinh/cộng đồng với dữ liệu chứng minh tác động.',
+      'Sàng lọc hợp chất/dược liệu bằng mô phỏng hoặc dữ liệu công khai, không tuyên bố điều trị khi chưa kiểm chứng.'
+    ],
+    feasibleEvidence: 'Dữ liệu ẩn danh hoặc mở, tiêu chí loại trừ rủi ro đạo đức, metric chẩn đoán, so sánh với baseline, phân tích sai lệch và tuyên bố giới hạn rõ.'
+  }
+};
+
+const KHKT_NATIONAL_RESEARCH_PRINCIPLES = `
+NGUYÊN TẮC TÌM ĐỀ TÀI KHKT CẤP QUỐC GIA:
+- Bám Thông tư 06/2024/TT-BGDĐT và tinh thần sửa đổi 24/2025/TT-BGDĐT: liêm chính khoa học, công khai, minh bạch, an toàn, đúng quy định, có thể bảo vệ trước giám khảo.
+- Ưu tiên đề tài có bài toán thời sự tại Việt Nam: chuyển đổi số, AI/IoT có dữ liệu thật, môi trường, biến đổi khí hậu, sức khỏe học đường, vật liệu xanh, nông nghiệp thông minh, hỗ trợ người yếu thế, an toàn số.
+- Đột phá không có nghĩa là viển vông: phải có cơ chế mới hoặc cách kết hợp mới, thử nghiệm trong 12 tháng, chi phí/năng lực phù hợp học sinh, có sản phẩm/dữ liệu/bằng chứng đo được.
+- Mỗi ý tưởng phải có baseline để đối sánh, tiêu chí thành công định lượng, kế hoạch thu thập dữ liệu, rủi ro/hạn chế và cách giải thích kết quả không thổi phồng.
+- Tránh các đề tài sáo mòn nếu không có cơ chế mới: thùng rác thông minh, app nhắc học, robot tưới cây, máy lọc nước mini, phân loại rác bằng AI đơn giản, trồng cây với các loại nước tưới quen thuộc.
+`.trim();
+
+function getKhktFieldGuide(field: string): KhktFieldGuide | undefined {
+  return KHKT_FIELD_GUIDES[field];
+}
+
+function buildKhktFieldCataloguePrompt() {
+  return KHKT_FIELD_OPTIONS.map((field, index) => {
+    const guide = getKhktFieldGuide(field);
+    return `${index + 1}. ${field}: ${guide?.officialScope || 'Thuộc danh mục lĩnh vực KHKT chính thức.'} Trọng tâm: ${guide?.researchFocus || 'Cần có câu hỏi nghiên cứu, dữ liệu và kiểm chứng rõ ràng.'}`;
+  }).join('\n');
+}
+
+function buildKhktSelectedFieldPrompt(field: string) {
+  const guide = getKhktFieldGuide(field);
+  if (!guide) {
+    return `Lĩnh vực đang chọn: ${field}. Hãy xác định đúng phạm vi nghiên cứu, tránh nhầm sang lĩnh vực khác, và đề xuất câu hỏi/vấn đề có thể kiểm chứng.`;
+  }
+
+  return `
+LĨNH VỰC ĐANG CHỌN: ${field}
+- Phạm vi nghiên cứu: ${guide.officialScope}
+- Trọng tâm cần hiểu: ${guide.researchFocus}
+- Góc đột phá nên ưu tiên:
+${guide.breakthroughAngles.map((angle, index) => `  ${index + 1}. ${angle}`).join('\n')}
+- Minh chứng khả thi cần có: ${guide.feasibleEvidence}
+`.trim();
+}
 
 const FIELD_OPTIONS = CREATIVE_FIELD_OPTIONS;
 
@@ -612,8 +878,13 @@ CÁCH KHAI THÁC BỐI CẢNH NÂNG CAO:
 Bạn là chuyên gia AI, giáo viên hướng dẫn nghiên cứu khoa học và giám khảo của "Cuộc thi nghiên cứu khoa học, kỹ thuật cấp quốc gia dành cho học sinh trung học" tại Việt Nam.
 Nhiệm vụ của bạn là tạo ra ĐÚNG 20 ĐỀ TÀI KHKT xuất sắc cho học sinh, bám sát danh mục 22 lĩnh vực chính thức và phiếu chấm 100 điểm.
 
-DANH MỤC 22 LĨNH VỰC KHKT:
-${KHKT_FIELD_OPTIONS.map((item, index) => `${index + 1}. ${item}`).join('\n')}
+DANH MỤC 22 LĨNH VỰC KHKT VÀ PHẠM VI NGHIÊN CỨU CẦN HIỂU:
+${buildKhktFieldCataloguePrompt()}
+
+CHUYÊN SÂU LĨNH VỰC ĐANG CHỌN:
+${buildKhktSelectedFieldPrompt(field)}
+
+${KHKT_NATIONAL_RESEARCH_PRINCIPLES}
 
 PHIẾU CHẤM KHKT 100 ĐIỂM CẦN BÁM SÁT:
 - Câu hỏi nghiên cứu hoặc vấn đề nghiên cứu: 10 điểm.
@@ -646,12 +917,14 @@ KHO Ý TƯỞNG/ĐỀ TÀI ĐÃ CÓ TRÊN MÁY NGƯỜI DÙNG (DANH SÁCH CẦN 
 ${ideaExclusionList}
 
 QUY TẮC BẮT BUỘC:
-1. Chỉ đề xuất đề tài phù hợp học sinh lớp ${grade}, an toàn, đúng đạo đức nghiên cứu, không dùng mầm bệnh, hóa chất độc hại hoặc nội dung có nguy cơ gây hại.
+1. Chỉ đề xuất đề tài phù hợp học sinh lớp ${grade}, an toàn, đúng đạo đức nghiên cứu, không dùng mầm bệnh, hóa chất độc hại hoặc nội dung có nguy cơ gây hại; thời gian thực hiện phải khả thi trong tối đa 12 tháng.
 2. Đề tài phải đủ chất "nghiên cứu" hoặc "kỹ thuật": có dữ liệu/đo đạc/thử nghiệm/nguyên mẫu, không chỉ là ý tưởng tuyên truyền hoặc sản phẩm trang trí.
 3. Với mỗi đề tài, phải ghi rõ nên đăng ký DỰ ÁN KHOA HỌC hay DỰ ÁN KỸ THUẬT. Nếu người dùng chọn một loại cụ thể thì ưu tiên đúng loại đó.
 4. Mỗi đề tài phải có cách kiểm chứng rõ ràng để ăn điểm mục Thực hiện và Nội dung khoa học.
 5. Không trùng tên, vấn đề chính, cơ chế hoạt động hoặc phương pháp nghiên cứu với danh sách đã có. Trong 20 đề tài cũng không được trùng nhau.
-6. Không viết "cách làm chi tiết" quá dài trong kết quả chính; chỉ nêu lộ trình ngắn gọn vì ứng dụng có nút hướng dẫn riêng.
+6. Mỗi đề tài phải có "điểm đột phá" cụ thể: cơ chế khoa học mới, kiến trúc kỹ thuật mới, dữ liệu mới, cách đo mới, hoặc ứng dụng mới trong bối cảnh Việt Nam; không dùng các cụm chung chung như "ứng dụng AI" nếu không nêu dữ liệu, mô hình, metric và baseline.
+7. Ưu tiên ý tưởng có thể đạt giải cao cấp quốc gia: giải quyết vấn đề cấp thiết, có tính mới so với giải pháp phổ biến, có số liệu đối sánh, poster/phỏng vấn dễ bảo vệ, và có hướng nghiên cứu tiếp theo.
+8. Không viết "cách làm chi tiết" quá dài trong kết quả chính; chỉ nêu lộ trình ngắn gọn vì ứng dụng có nút hướng dẫn riêng.
 
 ${isReroll ? 'YÊU CẦU ĐẶC BIỆT: Đây là lần [TÌM LẠI]. Hãy tạo 20 đề tài KHKT MỚI HOÀN TOÀN, không trùng lặp với lần trước.' : ''}
 
@@ -668,8 +941,9 @@ HÃY XUẤT KẾT QUẢ THEO ĐÚNG ĐỊNH DẠNG MARKDOWN SAU:
 ### 💡 Ý TƯỞNG 1: [Tên đề tài KHKT ngắn, rõ vấn đề, có tính nghiên cứu]
 - **Loại dự án & lĩnh vực:** (Dự án khoa học hoặc Dự án kỹ thuật; lĩnh vực đăng ký trong 22 lĩnh vực)
 - **Câu hỏi/Vấn đề nghiên cứu:** (Nêu đúng vấn đề cần giải quyết hoặc câu hỏi có thể kiểm chứng)
-- **Mục tiêu & tiêu chí thành công:** (Nêu 2-3 tiêu chí đo được)
-- **Giải pháp/Giả thuyết cốt lõi:** (Ý tưởng khoa học hoặc kỹ thuật then chốt)
+- **Mục tiêu & tiêu chí thành công:** (Nêu 2-3 tiêu chí đo được, có baseline/đối chứng để so sánh)
+- **Giải pháp/Giả thuyết cốt lõi:** (Ý tưởng khoa học hoặc kỹ thuật then chốt, nêu rõ điểm đột phá)
+- **Tính mới & đối sánh:** (So với giải pháp/phương pháp phổ biến, mới ở cơ chế, dữ liệu, thiết kế, thuật toán hay cách triển khai nào)
 - **Thiết kế và phương pháp:** (Cách thu thập dữ liệu, biến số, mẫu thử, hoặc cách thiết kế nguyên mẫu)
 - **Thực hiện và kiểm chứng:** (Cách đo đạc, thử nghiệm nhiều điều kiện, phân tích dữ liệu hoặc kiểm tra nguyên mẫu)
 - **Sản phẩm/dữ liệu cần có:** (Mô hình, bộ dữ liệu, biểu đồ, bảng đo, poster, nhật ký nghiên cứu)
@@ -948,7 +1222,7 @@ NHIỆM VỤ BẮT BUỘC:
 2. Bắt đầu chính xác bằng heading: ### 💡 Ý TƯỞNG ${nextIdeaNumber}: [Tên đề tài KHKT]
 3. Viết tiếp đầy đủ đến ### 💡 Ý TƯỞNG 20.
 4. Sau Ý TƯỞNG 20, viết mục ## 🏆 4. TOP 3 ĐỀ TÀI KHKT NÊN ƯU TIÊN bằng bảng Markdown GFM có đúng 6 cột: Hạng | Đề tài | Loại dự án | Điểm rubric | Vì sao mạnh | Việc cần làm ngay.
-5. Giữ đúng cấu trúc 10 gạch đầu dòng cho mỗi đề tài: Loại dự án & lĩnh vực; Câu hỏi/Vấn đề nghiên cứu; Mục tiêu & tiêu chí thành công; Giải pháp/Giả thuyết cốt lõi; Thiết kế và phương pháp; Thực hiện và kiểm chứng; Sản phẩm/dữ liệu cần có; Điểm rubric KHKT; Rủi ro, hạn chế & cách khắc phục; Lộ trình ngắn gọn.
+5. Giữ đúng cấu trúc 11 gạch đầu dòng cho mỗi đề tài: Loại dự án & lĩnh vực; Câu hỏi/Vấn đề nghiên cứu; Mục tiêu & tiêu chí thành công; Giải pháp/Giả thuyết cốt lõi; Tính mới & đối sánh; Thiết kế và phương pháp; Thực hiện và kiểm chứng; Sản phẩm/dữ liệu cần có; Điểm rubric KHKT; Rủi ro, hạn chế & cách khắc phục; Lộ trình ngắn gọn.
 6. Mọi đề tài viết tiếp phải khác hoàn toàn các đề tài trong bộ nhớ cũ và khác các đề tài đã có ở phần trước.
 7. Không viết phần hướng dẫn chi tiết quá dài; chỉ nêu lộ trình ngắn gọn.
 
@@ -964,6 +1238,11 @@ THÔNG TIN ĐẦU VÀO:
 - Mục tiêu: ${mucTieu}
 - Bối cảnh: ${context || 'Không có'}
 - Nguồn lực: ${resources || 'Không có'}
+
+CHUYÊN SÂU LĨNH VỰC ĐANG CHỌN:
+${buildKhktSelectedFieldPrompt(field)}
+
+${KHKT_NATIONAL_RESEARCH_PRINCIPLES}
 
 ${buildAdvancedContextPrompt()}
 
@@ -1055,6 +1334,10 @@ THÔNG TIN CUỘC THI:
 - Lĩnh vực: ${field}
 ${isKhktContest ? `- Loại dự án ưu tiên: ${getKhktProjectTypeLabel(khktProjectType)}
 - Phiếu chấm cần bám: Vấn đề/Câu hỏi 10; Thiết kế & phương pháp 15; Thực hiện/kiểm chứng 20; Sáng tạo 20; Báo cáo 10; Nội dung khoa học 25.` : `- Mục tiêu: ${mucTieu}`}
+${isKhktContest ? `
+TRỌNG TÂM LĨNH VỰC KHKT:
+${buildKhktSelectedFieldPrompt(field)}
+${KHKT_NATIONAL_RESEARCH_PRINCIPLES}` : ''}
 
 Ý TƯỞNG CẦN ĐÁNH GIÁ:
 ${sectionContent}
@@ -1142,6 +1425,10 @@ THÔNG TIN CUỘC THI:
 - Lĩnh vực: ${field}
 ${isKhktContest ? `- Loại dự án ưu tiên: ${getKhktProjectTypeLabel(khktProjectType)}
 - Mục tiêu nâng cấp: tăng điểm Thực hiện/kiểm chứng, Tính sáng tạo và Nội dung khoa học theo phiếu chấm KHKT.` : `- Mục tiêu: ${mucTieu}`}
+${isKhktContest ? `
+TRỌNG TÂM LĨNH VỰC KHKT:
+${buildKhktSelectedFieldPrompt(field)}
+${KHKT_NATIONAL_RESEARCH_PRINCIPLES}` : ''}
 
 Ý TƯỞNG BAN ĐẦU:
 ${sectionContent}
@@ -1241,6 +1528,10 @@ ${isKhktContest ? `- Loại dự án ưu tiên: ${getKhktProjectTypeLabel(khktPr
 - Vấn đề muốn giải quyết: ${problem || 'Không có'}
 - Ý tưởng đã có/không muốn trùng: ${avoidIdeas || 'Không có'}
 - Điểm riêng địa phương/trường/lớp: ${localTraits || 'Không có'}
+${isKhktContest ? `
+TRỌNG TÂM LĨNH VỰC KHKT:
+${buildKhktSelectedFieldPrompt(field)}
+${KHKT_NATIONAL_RESEARCH_PRINCIPLES}` : ''}
 
 YÊU CẦU TRÌNH BÀY:
 1. Không viết lại toàn bộ phần phân tích ý tưởng. Chỉ tập trung vào cách làm thực tế.
@@ -1344,6 +1635,10 @@ THÔNG TIN CUỘC THI:
 - Lĩnh vực: ${field}
 ${isKhktContest ? `- Loại dự án ưu tiên: ${getKhktProjectTypeLabel(khktProjectType)}
 - Rubric KHKT: Vấn đề/Câu hỏi 10; Thiết kế & phương pháp 15; Thực hiện/kiểm chứng 20; Sáng tạo 20; Báo cáo 10; Nội dung khoa học 25.` : `- Mục tiêu: ${mucTieu}`}
+${isKhktContest ? `
+TRỌNG TÂM LĨNH VỰC KHKT:
+${buildKhktSelectedFieldPrompt(field)}
+${KHKT_NATIONAL_RESEARCH_PRINCIPLES}` : ''}
 
 Ý TƯỞNG CẦN SO SÁNH:
 ${ideaContent}
@@ -2424,6 +2719,20 @@ Trình bày bằng Markdown, rõ ràng, ngắn gọn và có tính thực tế.`
                   <option key={opt} value={opt} className="bg-teal-900 text-teal-50">{opt}</option>
                 ))}
               </select>
+              {isKhktContest && (() => {
+                const selectedFieldGuide = getKhktFieldGuide(field);
+                if (!selectedFieldGuide) return null;
+
+                return (
+                  <div className="rounded-xl border border-emerald-400/20 bg-emerald-950/25 px-3 py-2.5 text-xs text-teal-100">
+                    <div className="font-extrabold uppercase tracking-wide text-emerald-300">Trọng tâm nghiên cứu</div>
+                    <p className="mt-1 leading-relaxed">{selectedFieldGuide.researchFocus}</p>
+                    <p className="mt-1.5 leading-relaxed text-teal-200">
+                      <span className="font-bold text-emerald-200">Góc đột phá:</span> {selectedFieldGuide.breakthroughAngles[0]}
+                    </p>
+                  </div>
+                );
+              })()}
             </div>
 
             {isKhktContest && (
