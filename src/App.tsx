@@ -2376,6 +2376,35 @@ ${guideContent}
     );
   };
 
+  const downloadEnhancedIdeaWord = async (ideaTitle: string, ideaContent: string, enhancementContent: string) => {
+    const cleanTitle = ideaTitle.replace(/^Ý TƯỞNG\s+\d+\s*:\s*/i, '').trim() || ideaTitle;
+    const docContent = `# ${isKhktContest ? 'Bản nâng cấp đột phá đề tài KHKT' : 'Bản nâng cấp sáng tạo đột phá'}
+
+## ${cleanTitle}
+
+### Thông tin cuộc thi
+- **Cuộc thi:** ${contestMeta.title}
+- **Lĩnh vực:** ${field}
+${isKhktContest ? `- **Loại dự án ưu tiên:** ${getKhktProjectTypeLabel(khktProjectType)}` : ''}
+- **Cấp học:** ${capHoc}
+- **Lớp:** ${grade}
+- **Giới hạn công nghệ:** ${techLimit}
+- **Mục tiêu:** ${mucTieu}
+- **Nguồn lực:** ${resources || 'Không có'}
+
+### Ý tưởng/đề tài gốc
+${ideaContent}
+
+### Đề xuất sáng tạo đột phá
+${enhancementContent}
+`;
+
+    await generateAndDownloadWordDoc(
+      docContent,
+      `${isKhktContest ? 'Nâng cấp KHKT' : 'Sáng tạo đột phá'} - ${cleanTitle}`
+    );
+  };
+
   const loadSession = (session: SavedSession) => {
     const nextContestType = session.inputs.contestType || inferContestTypeFromField(session.inputs.field);
     setContestType(nextContestType);
@@ -2540,9 +2569,18 @@ ${guideContent}
                   animate={{ opacity: 1, y: 0 }}
                   className="p-6 rounded-2xl bg-fuchsia-950/30 border border-fuchsia-800/50 shadow-inner mt-2"
                 >
-                  <h4 className="text-lg font-bold text-fuchsia-400 mb-4 flex items-center gap-2 border-b border-fuchsia-800/50 pb-3">
-                    <Sparkles className="w-5 h-5" /> Đề xuất sáng tạo đột phá
-                  </h4>
+                  <div className="mb-4 flex flex-col gap-3 border-b border-fuchsia-800/50 pb-3 sm:flex-row sm:items-center sm:justify-between">
+                    <h4 className="text-lg font-bold text-fuchsia-400 flex items-center gap-2">
+                      <Sparkles className="w-5 h-5" /> Đề xuất sáng tạo đột phá
+                    </h4>
+                    <button
+                      onClick={() => downloadEnhancedIdeaWord(title, part, inlineEnhancements[title])}
+                      className="px-3 py-2 rounded-xl font-semibold text-xs bg-fuchsia-500 text-white hover:bg-fuchsia-400 transition-colors flex items-center justify-center gap-2 shadow-sm"
+                    >
+                      <Download className="w-4 h-4" />
+                      Xuất Word đẹp
+                    </button>
+                  </div>
                   <div className="prose prose-invert max-w-none prose-p:text-fuchsia-100/90 prose-li:text-fuchsia-100/90 prose-strong:text-fuchsia-300 prose-headings:text-fuchsia-200">
                     <ReactMarkdown remarkPlugins={[remarkGfm]}>{inlineEnhancements[title]}</ReactMarkdown>
                   </div>
